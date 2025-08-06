@@ -1,0 +1,54 @@
+name: NetSpeedMonitor
+options:
+  bundleIdPrefix: com.frolax
+  deploymentTarget:
+    macOS: "15.0"
+  xcodeVersion: "16.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+settings:
+  MACOSX_DEPLOYMENT_TARGET: "15.0"
+  SWIFT_VERSION: "5.10"
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "1"
+  INFOPLIST_KEY_LSUIElement: true
+  INFOPLIST_KEY_NSPrincipalClass: "NSApplication"
+  INFOPLIST_KEY_CFBundleDisplayName: "Net Speed Monitor"
+  INFOPLIST_KEY_CFBundleName: "NetSpeedMonitor"
+  INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.utilities"
+  ENABLE_HARDENED_RUNTIME: true
+  CODE_SIGN_ENTITLEMENTS: "NetSpeedMonitor/NetSpeedMonitor.entitlements"
+targets:
+  NetSpeedMonitor:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - NetSpeedMonitor
+    info:
+      path: NetSpeedMonitor/Info.plist
+      properties:
+        CFBundleIdentifier: com.frolax.netspeedmonitor
+        CFBundleDisplayName: Net Speed Monitor
+        CFBundleName: NetSpeedMonitor
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.utilities
+        NSPrincipalClass: NSApplication
+        LSMinimumSystemVersion: "15.0"
+        NSHighResolutionCapable: true
+        NSHumanReadableCopyright: "© 2024 Frolax. All rights reserved."
+        NSNetworkUsageDescription: "This app monitors network usage to display real-time bandwidth statistics."
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.frolax.netspeedmonitor
+      INFOPLIST_FILE: NetSpeedMonitor/Info.plist
+      CODE_SIGN_ENTITLEMENTS: NetSpeedMonitor/NetSpeedMonitor.entitlements
+      ENABLE_HARDENED_RUNTIME: true
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_STYLE: Automatic
+    dependencies:
+      - sdk: Network.framework
+      - sdk: ServiceManagement.framework
+      - sdk: AppKit.framework
+      - sdk: SwiftUI.framework
