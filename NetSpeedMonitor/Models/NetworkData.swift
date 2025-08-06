@@ -76,7 +76,7 @@ struct AppSettings: Codable {
     var speedUnit: SpeedUnit = .mbps
     var topAppsCount: Int = 10
     var startAtLogin: Bool = false
-    var showNotifications: Bool = true
+    var showNotifications: Bool = false
     var notificationThreshold: Double = 1.0 // MB/s
     var notificationDuration: Int = 5 // seconds
     var isDarkMode: Bool = false

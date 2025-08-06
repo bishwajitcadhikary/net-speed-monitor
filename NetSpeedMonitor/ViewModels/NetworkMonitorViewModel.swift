@@ -43,12 +43,16 @@ class NetworkMonitorViewModel: ObservableObject {
                 self?.notificationService.checkForSpeedAlert(currentSpeed: stats.currentSpeed)
             }
             .store(in: &cancellables)
-        
-        // Monitor settings changes
+
+        // Monitor settings changes and trigger UI updates
         settingsService.$settings
             .receive(on: DispatchQueue.main)
             .sink { [weak self] settings in
-                self?.networkService.updateRefreshRate(settings.refreshRate.rawValue)
+                guard let self = self else { return }
+                self.networkService.updateRefreshRate(settings.refreshRate.rawValue)
+                self.updateMenuBarText(with: self.networkStats.currentSpeed)
+                // Manually notify SwiftUI that the viewModel has changed to force view updates
+                self.objectWillChange.send()
             }
             .store(in: &cancellables)
     }

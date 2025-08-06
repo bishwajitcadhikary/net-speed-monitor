@@ -3,34 +3,70 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedTab = 0
+    
+    private let tabs = [
+        (id: 0, icon: "gear", title: "General"),
+        (id: 1, icon: "display", title: "Display"),
+        (id: 2, icon: "bell", title: "Notifications"),
+        (id: 3, icon: "slider.horizontal.3", title: "Advanced"),
+        (id: 4, icon: "info.circle", title: "About")
+    ]
     
     var body: some View {
-        TabView {
-            GeneralSettingsView(viewModel: viewModel)
-                .tabItem {
-                    Image(systemName: "gear")
-                    Text("General")
+        VStack(spacing: 0) {
+            // Custom tab bar
+            HStack(spacing: 0) {
+                ForEach(tabs, id: \.id) { tab in
+                    Button(action: {
+                        selectedTab = tab.id
+                    }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 24, weight: .regular))
+                                .foregroundColor(selectedTab == tab.id ? .accentColor : .secondary)
+                            
+                            Text(tab.title)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(selectedTab == tab.id ? .primary : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
+            }
+            .background(Color(NSColor.controlBackgroundColor))
+            .overlay(
+                Rectangle()
+                    .frame(height: 0.5)
+                    .foregroundColor(Color(NSColor.separatorColor)),
+                alignment: .bottom
+            )
             
-            DisplaySettingsView(viewModel: viewModel)
-                .tabItem {
-                    Image(systemName: "display")
-                    Text("Display")
+            // Content area
+            ScrollView {
+                Group {
+                    switch selectedTab {
+                    case 0:
+                        GeneralSettingsView(viewModel: viewModel)
+                    case 1:
+                        DisplaySettingsView(viewModel: viewModel)
+                    case 2:
+                        NotificationSettingsView(viewModel: viewModel)
+                    case 3:
+                        AdvancedSettingsView(viewModel: viewModel)
+                    case 4:
+                        AboutSettingsView(viewModel: viewModel)
+                    default:
+                        GeneralSettingsView(viewModel: viewModel)
+                    }
                 }
-            
-            NotificationSettingsView(viewModel: viewModel)
-                .tabItem {
-                    Image(systemName: "bell")
-                    Text("Notifications")
-                }
-            
-            AdvancedSettingsView(viewModel: viewModel)
-                .tabItem {
-                    Image(systemName: "slider.horizontal.3")
-                    Text("Advanced")
-                }
+                .frame(maxWidth: .infinity)
+            }
         }
-        .frame(width: 500, height: 400)
+        .frame(width: 550, height: 450)
         .navigationTitle("Net Speed Monitor Settings")
     }
 }
@@ -56,7 +92,6 @@ struct GeneralSettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    .frame(width: 120)
                     Spacer()
                 }
                 
@@ -72,7 +107,6 @@ struct GeneralSettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
-                    .frame(width: 120)
                     Spacer()
                 }
                 
@@ -115,15 +149,15 @@ struct GeneralSettingsView: View {
                 
                 Spacer()
                 
-                Button("Export Settings") {
-                    exportSettings()
-                }
-                .buttonStyle(.bordered)
-                
-                Button("Import Settings") {
-                    importSettings()
-                }
-                .buttonStyle(.bordered)
+//                Button("Export Settings") {
+//                    exportSettings()
+//                }
+//                .buttonStyle(.bordered)
+//                
+//                Button("Import Settings") {
+//                    importSettings()
+//                }
+//                .buttonStyle(.bordered)
             }
         }
         .padding()
@@ -344,6 +378,17 @@ struct NotificationSettingsView: View {
     }
 }
 
+struct AboutView: View {
+    @ObservedObject var viewModel: NetworkMonitorViewModel
+    
+    var body: some View{
+        VStack(alignment: .leading){
+            Text("About US")
+                .font(.headline)
+        }
+    }
+}
+
 struct AdvancedSettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     
@@ -430,6 +475,110 @@ struct AdvancedSettingsView: View {
             Spacer()
         }
         .padding()
+    }
+}
+
+struct AboutSettingsView: View {
+    @ObservedObject var viewModel: NetworkMonitorViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("About Net Speed Monitor")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 16) {
+                // App Info
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Application Information")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    InfoItemView(label: "Version", value: "1.0.0")
+                    InfoItemView(label: "Build", value: "1")
+                    InfoItemView(label: "Bundle ID", value: "com.frolax.netspeedmonitor")
+                }
+                
+                Divider()
+                
+                // Company Info
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Developer Information")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    InfoItemView(label: "Company", value: "Frolax")
+                    InfoItemView(label: "Developer", value: "Bishwajit Adhikary")
+                    InfoItemView(label: "Contact", value: "support@frolax.com")
+                }
+                
+                Divider()
+                
+                // System Info
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("System Information")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    InfoItemView(label: "macOS Version", value: ProcessInfo.processInfo.operatingSystemVersionString)
+                    InfoItemView(label: "Architecture", value: getSystemArchitecture())
+                }
+                
+                Divider()
+                
+                // Links
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Resources")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    HStack {
+                        Button("Website") {
+                            NSWorkspace.shared.open(URL(string: "https://frolax.com")!)
+                        }
+                        .buttonStyle(.link)
+                        
+                        Button("GitHub") {
+                            NSWorkspace.shared.open(URL(string: "https://github.com/frolax/net-speed-monitor")!)
+                        }
+                        .buttonStyle(.link)
+                        
+                        Button("Support") {
+                            NSWorkspace.shared.open(URL(string: "mailto:support@frolax.com")!)
+                        }
+                        .buttonStyle(.link)
+                        
+                        Spacer()
+                    }
+                }
+                
+                Divider()
+                
+                // Copyright
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Copyright © 2024 Frolax. All rights reserved.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text("Net Speed Monitor is a lightweight macOS application for monitoring network speed and bandwidth usage in real-time.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+    }
+    
+    private func getSystemArchitecture() -> String {
+        #if arch(arm64)
+        return "Apple Silicon (ARM64)"
+        #elseif arch(x86_64)
+        return "Intel (x86_64)"
+        #else
+        return "Unknown"
+        #endif
     }
 }
 

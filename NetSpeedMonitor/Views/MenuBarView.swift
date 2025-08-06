@@ -153,7 +153,7 @@ struct TopAppsView: View {
                 Text("Top Apps by Network Usage")
                     .font(.headline)
                     .padding(.horizontal)
-                    .padding(.top, 8)
+                    .padding(.vertical, 8)
                 
                 Spacer()
                 
@@ -163,7 +163,7 @@ struct TopAppsView: View {
                 .buttonStyle(.borderless)
                 .font(.caption)
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.vertical, 8)
             }
             
             ScrollView {

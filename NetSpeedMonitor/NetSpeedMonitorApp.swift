@@ -6,9 +6,8 @@ struct NetSpeedMonitorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        Settings {
-            SettingsView(viewModel: appDelegate.viewModel)
-        }
+        // This is required for the app lifecycle but the window will be hidden.
+        WindowGroup { EmptyView() }
     }
 }
 
@@ -180,7 +179,32 @@ extension AppDelegate {
     }
 
     @objc func openSettings() {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        // Ensure we have a reference to the settings window.
+        var settingsWindow: NSWindow?
+
+        // Check if the window already exists.
+        for window in NSApp.windows {
+            if window.title == "Net Speed Monitor Settings" {
+                settingsWindow = window
+                break
+            }
+        }
+
+        // If the window exists, bring it to the front.
+        if let window = settingsWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        } else {
+            // Otherwise, create a new settings window.
+            let settingsView = SettingsView(viewModel: viewModel)
+            let hostingController = NSHostingController(rootView: settingsView)
+            let newWindow = NSWindow(contentViewController: hostingController)
+            newWindow.title = "Net Speed Monitor Settings"
+            newWindow.setContentSize(NSSize(width: 500, height: 400))
+            newWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            settingsWindow = newWindow
+        }
     }
 
     @MainActor @objc private func quitApp() {
