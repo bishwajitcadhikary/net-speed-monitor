@@ -6,21 +6,17 @@ struct NetSpeedMonitorApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // Menu bar only app - no main window needed
-        // All UI is managed through AppDelegate
-        WindowGroup {
-            EmptyView()
-                .frame(width: 0, height: 0)
-                .hidden()
+        Settings {
+            SettingsView(viewModel: appDelegate.viewModel)
         }
-        .windowStyle(.hiddenTitleBar)
     }
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusBarItem: NSStatusItem!
     var popover: NSPopover!
-    var viewModel: NetworkMonitorViewModel!
+    let viewModel = NetworkMonitorViewModel()
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Hide from Dock and any main window
@@ -31,8 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         
-        // Create view model
-        viewModel = NetworkMonitorViewModel()
+        
         
         // Setup status bar
         setupStatusBar()
@@ -43,12 +38,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Start monitoring
         viewModel.startMonitoring()
         
-        // Handle window closing behavior
-        setupWindowBehavior()
+        
     }
     
     func applicationWillTerminate(_ notification: Notification) {
-        viewModel?.stopMonitoring()
+        viewModel.stopMonitoring()
     }
     
     @MainActor private func setupStatusBar() {
@@ -130,32 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
     
-    private func setupWindowBehavior() {
-        // Handle settings window closing
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.willCloseNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] notification in
-            if let window = notification.object as? NSWindow,
-               window.title.contains("Settings") {
-                Task { @MainActor in
-                    self?.viewModel.hideSettings()
-                }
-            }
-        }
-        
-        // Handle settings window opening requests
-        NotificationCenter.default.addObserver(
-            forName: .openSettingsWindow,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.openSettings()
-            }
-        }
-    }
+    
     
     @objc private func togglePopover() {
         guard let button = statusBarItem.button else { return }
@@ -187,58 +156,33 @@ extension NetworkMonitorViewModel {
     }
 }
 
-// MARK: - Menu Support
-
-extension AppDelegate: NSMenuDelegate {
+extension AppDelegate {
     private func createContextMenu() -> NSMenu {
         let menu = NSMenu()
-        
+
         let showItem = NSMenuItem(title: "Show Net Speed Monitor", action: #selector(togglePopover), keyEquivalent: "")
         showItem.target = self
         menu.addItem(showItem)
-        
+
         menu.addItem(NSMenuItem.separator())
-        
+
         let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
-        
+
         menu.addItem(NSMenuItem.separator())
-        
+
         let quitItem = NSMenuItem(title: "Quit Net Speed Monitor", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
-        
+
         return menu
     }
-    
-    @MainActor @objc func openSettings() {
-        print("DEBUG: openSettings() called - creating settings window")
-        
-        // Set the flag in viewModel
-        viewModel.showingSettings = true
-        
-        // Check if settings window already exists
-        if let settingsWindow = NSApp.windows.first(where: { $0.title.contains("Settings") }) {
-            print("DEBUG: Found existing settings window, bringing to front")
-            settingsWindow.makeKeyAndOrderFront(nil)
-            return
-        }
-        
-        // Create new settings window if it doesn't exist
-        print("DEBUG: Creating new settings window")
-        let settingsView = SettingsView(viewModel: viewModel)
-        let hostingController = NSHostingController(rootView: settingsView)
-        
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "Net Speed Monitor Settings"
-        window.setContentSize(NSSize(width: 500, height: 400))
-        window.styleMask = [.titled, .closable, .resizable]
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        print("DEBUG: Settings window created and shown")
+
+    @objc func openSettings() {
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
-    
+
     @MainActor @objc private func quitApp() {
         viewModel.quitApplication()
     }

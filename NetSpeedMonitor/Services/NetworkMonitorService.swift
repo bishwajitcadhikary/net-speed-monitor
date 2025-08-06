@@ -8,6 +8,7 @@ class NetworkMonitorService: ObservableObject {
     @Published var currentStats = NetworkStats.empty
     @Published var isConnected = false
     @Published var connectionType: NetworkInterface.InterfaceType = .other
+    private var publicIP: String?
     
     private let pathMonitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "NetworkMonitor", qos: .utility)
@@ -24,25 +25,27 @@ class NetworkMonitorService: ObservableObject {
     
     func startMonitoring(refreshRate: TimeInterval = 1.0) {
         self.refreshRate = refreshRate
-        
+
         pathMonitor.start(queue: monitorQueue)
-        
+        appUsageMonitor.start()
+        pingService.start(host: "8.8.8.8")
+
         timer = Timer.scheduledTimer(withTimeInterval: refreshRate, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                await self?.updateNetworkStats()
+                self?.updateNetworkStats()
             }
         }
-        
+
         // Initial update
-        Task {
-            await updateNetworkStats()
-        }
+        updateNetworkStats()
     }
-    
+
     func stopMonitoring() {
         timer?.invalidate()
         timer = nil
         pathMonitor.cancel()
+        appUsageMonitor.stop()
+        pingService.stop()
     }
     
     private func setupNetworkMonitoring() {
@@ -50,6 +53,12 @@ class NetworkMonitorService: ObservableObject {
             DispatchQueue.main.async {
                 self?.isConnected = path.status == .satisfied
                 self?.connectionType = self?.getConnectionType(from: path) ?? .other
+
+                if path.status == .satisfied {
+                    Task { [weak self] in
+                        self?.publicIP = await self?.getPublicIP()
+                    }
+                }
             }
         }
     }
@@ -66,20 +75,21 @@ class NetworkMonitorService: ObservableObject {
         }
     }
     
-    private func updateNetworkStats() async {
-        let speed = await speedCalculator.getCurrentSpeed()
-        let topApps = await appUsageMonitor.getTopApps(limit: 10)
-        let activeInterface = getCurrentInterface()
-        let publicIP = await getPublicIP()
-        let ping = await pingService.ping(host: "8.8.8.8")
-        
-        currentStats = NetworkStats(
-            currentSpeed: speed,
-            topApps: topApps,
-            activeInterface: activeInterface,
-            publicIP: publicIP,
-            ping: ping
-        )
+    private func updateNetworkStats() {
+        Task {
+            let speed = await speedCalculator.getCurrentSpeed()
+            let topApps = appUsageMonitor.getTopApps(limit: 10)
+            let activeInterface = getCurrentInterface()
+            let ping = pingService.getCurrentPingTime()
+
+            currentStats = NetworkStats(
+                currentSpeed: speed,
+                topApps: topApps,
+                activeInterface: activeInterface,
+                publicIP: publicIP,
+                ping: ping
+            )
+        }
     }
     
     private func getCurrentInterface() -> NetworkInterface? {
@@ -208,89 +218,113 @@ class NetworkSpeedCalculator {
 
 class AppUsageMonitor {
     private let processMonitor = ProcessMonitor()
-    
-    func getTopApps(limit: Int) async -> [AppNetworkUsage] {
-        return await processMonitor.getTopNetworkApps(limit: limit)
+
+    func start() {
+        processMonitor.start()
+    }
+
+    func stop() {
+        processMonitor.stop()
+    }
+
+    func getTopApps(limit: Int) -> [AppNetworkUsage] {
+        return processMonitor.getTopNetworkApps(limit: limit)
     }
 }
 
 // MARK: - Process Monitor
 
-class ProcessMonitor: @unchecked Sendable {
-    func getTopNetworkApps(limit: Int) async -> [AppNetworkUsage] {
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                let apps = self.parseNettopOutput(limit: limit)
-                continuation.resume(returning: apps)
+class ProcessMonitor {
+    private var task: Process?
+    private var pipe: Pipe?
+    private var buffer = ""
+
+    func start() {
+        guard task == nil else { return }
+
+        task = Process()
+        task?.launchPath = "/usr/bin/nettop"
+        task?.arguments = ["-L", "0", "-P", "-x"]
+
+        pipe = Pipe()
+        task?.standardOutput = pipe
+
+        pipe?.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            if let output = String(data: data, encoding: .utf8) {
+                self?.buffer.append(output)
             }
         }
-    }
-    
-    private func parseNettopOutput(limit: Int) -> [AppNetworkUsage] {
-        let task = Process()
-        task.launchPath = "/usr/bin/nettop"
-        task.arguments = ["-P", "-x", "-J", "-l", "1"]
-        
-        let pipe = Pipe()
-        task.standardOutput = pipe
-        task.standardError = pipe
-        
+
         do {
-            try task.run()
-            task.waitUntilExit()
-            
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            
-            return parseNetworkUsage(from: output, limit: limit)
+            try task?.run()
         } catch {
-            print("Error running nettop: \(error)")
-            return []
+            print("Error starting nettop: \(error)")
         }
     }
-    
-    private func parseNetworkUsage(from output: String, limit: Int) -> [AppNetworkUsage] {
-        var apps: [AppNetworkUsage] = []
-        
-        let lines = output.components(separatedBy: .newlines)
-        
+
+    func stop() {
+        task?.terminate()
+        task = nil
+        pipe?.fileHandleForReading.readabilityHandler = nil
+        pipe = nil
+    }
+
+    func getTopNetworkApps(limit: Int) -> [AppNetworkUsage] {
+        let lines = buffer.components(separatedBy: .newlines)
+        buffer = "" // Clear buffer after processing
+
+        var apps: [String: AppNetworkUsage] = [:]
+
         for line in lines {
-            if let app = parseAppUsageLine(line) {
-                apps.append(app)
+            let components = line.components(separatedBy: ",")
+            if components.count > 5 {
+                let processNameWithPid = components[1]
+                let bytesIn = Double(components[4]) ?? 0
+                let bytesOut = Double(components[5]) ?? 0
+
+                let processName = getProcessName(from: processNameWithPid)
+                let pid = getPid(from: processNameWithPid)
+
+                if var app = apps[processName] {
+                    app.upload += bytesOut
+                    app.download += bytesIn
+                    apps[processName] = app
+                } else {
+                    let bundleId = getBundleIdentifier(for: pid)
+                    let icon = NSImage.appIcon(for: pid) ?? NSImage.appIcon(for: bundleId ?? "")
+                    apps[processName] = AppNetworkUsage(
+                        processID: pid,
+                        processName: processName,
+                        bundleIdentifier: bundleId,
+                        upload: bytesOut,
+                        download: bytesIn,
+                        icon: icon
+                    )
+                }
             }
         }
-        
-        // Sort by total usage and return top apps
-        return Array(apps.sorted { $0.totalUsage > $1.totalUsage }.prefix(limit))
+
+        return Array(apps.values.sorted { $0.totalUsage > $1.totalUsage }.prefix(limit))
     }
-    
-    private func parseAppUsageLine(_ line: String) -> AppNetworkUsage? {
-        // This is a simplified parser - nettop output format can vary
-        // In a real implementation, you'd need to parse the JSON output properly
-        let components = line.components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-        
-        guard components.count >= 6,
-              let pid = Int32(components[0]),
-              let downloadBytes = Double(components[4]),
-              let uploadBytes = Double(components[5]) else {
-            return nil
+
+    private func getProcessName(from processNameWithPid: String) -> String {
+        if let dotIndex = processNameWithPid.lastIndex(of: ".") {
+            return String(processNameWithPid[..<dotIndex])
         }
-        
-        let processName = components[1]
-        let bundleId = getBundleIdentifier(for: pid)
-        let icon = NSImage.appIcon(for: pid) ?? NSImage.appIcon(for: bundleId ?? "")
-        
-        return AppNetworkUsage(
-            processID: pid,
-            processName: processName,
-            bundleIdentifier: bundleId,
-            upload: uploadBytes,
-            download: downloadBytes,
-            icon: icon
-        )
+        return processNameWithPid
     }
-    
+
+    private func getPid(from processNameWithPid: String) -> Int32 {
+        if let dotIndex = processNameWithPid.lastIndex(of: ".") {
+            let pidString = processNameWithPid[processNameWithPid.index(after: dotIndex)...]
+            return Int32(pidString) ?? 0
+        }
+        return 0
+    }
+
     private func getBundleIdentifier(for pid: Int32) -> String? {
+        if pid == 0 { return nil }
         let runningApp = NSWorkspace.shared.runningApplications.first { $0.processIdentifier == pid }
         return runningApp?.bundleIdentifier
     }
@@ -298,36 +332,48 @@ class ProcessMonitor: @unchecked Sendable {
 
 // MARK: - Ping Service
 
-class PingService: @unchecked Sendable {
-    func ping(host: String) async -> Double? {
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                let task = Process()
-                task.launchPath = "/sbin/ping"
-                task.arguments = ["-c", "1", "-W", "1000", host]
-                
-                let pipe = Pipe()
-                task.standardOutput = pipe
-                
-                do {
-                    try task.run()
-                    task.waitUntilExit()
-                    
-                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    let output = String(data: data, encoding: .utf8) ?? ""
-                    
-                    let pingTime = self.parsePingTime(from: output)
-                    continuation.resume(returning: pingTime)
-                } catch {
-                    continuation.resume(returning: nil)
-                }
+class PingService {
+    private var task: Process?
+    private var pipe: Pipe?
+    private var lastPingTime: Double?
+
+    func start(host: String) {
+        guard task == nil else { return }
+
+        task = Process()
+        task?.launchPath = "/sbin/ping"
+        task?.arguments = ["-i", "1", host]
+
+        pipe = Pipe()
+        task?.standardOutput = pipe
+
+        pipe?.fileHandleForReading.readabilityHandler = { [weak self] handle in
+            let data = handle.availableData
+            if let output = String(data: data, encoding: .utf8) {
+                self?.lastPingTime = self?.parsePingTime(from: output)
             }
         }
+
+        do {
+            try task?.run()
+        } catch {
+            print("Error starting ping: \(error)")
+        }
     }
-    
+
+    func stop() {
+        task?.terminate()
+        task = nil
+        pipe?.fileHandleForReading.readabilityHandler = nil
+        pipe = nil
+    }
+
+    func getCurrentPingTime() -> Double? {
+        return lastPingTime
+    }
+
     private func parsePingTime(from output: String) -> Double? {
         let lines = output.components(separatedBy: .newlines)
-        
         for line in lines {
             if line.contains("time=") {
                 let components = line.components(separatedBy: "time=")
@@ -337,7 +383,6 @@ class PingService: @unchecked Sendable {
                 }
             }
         }
-        
         return nil
     }
 }

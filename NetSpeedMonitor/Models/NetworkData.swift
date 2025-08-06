@@ -19,8 +19,8 @@ struct AppNetworkUsage {
     let processID: Int32
     let processName: String
     let bundleIdentifier: String?
-    let upload: Double      // bytes per second
-    let download: Double    // bytes per second
+    var upload: Double      // bytes per second
+    var download: Double    // bytes per second
     let icon: NSImage?
     
     var totalUsage: Double {
