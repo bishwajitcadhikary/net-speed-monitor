@@ -55,9 +55,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusBarItem.button {
-            button.title = "-- KB/s"
+            button.title = "↑ -- KB/s\n↓ -- KB/s"
             button.action = #selector(togglePopover)
             button.target = self
+            
+            // Configure button for proper vertical centering
+            button.imagePosition = .noImage
+            button.alignment = .center
+            if let cell = button.cell {
+                cell.controlSize = .regular
+                cell.font = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
+            }
             
             // Add right-click context menu
             let contextMenu = createContextMenu()
@@ -67,9 +75,49 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let cancellable = viewModel.$menuBarText
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] text in
-                    self?.statusBarItem.button?.title = text
+                    self?.updateStatusBarButton(with: text)
                 }
             viewModel.addCancellable(cancellable)
+        }
+    }
+    
+    @MainActor private func updateStatusBarButton(with text: String) {
+        guard let button = statusBarItem.button else { return }
+        
+        // Create attributed string for multi-line support with proper centering
+        let lines = text.components(separatedBy: "\n")
+        if lines.count == 2 {
+            _ = NSMutableAttributedString()
+            
+            // Create paragraph style for center alignment
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+            paragraphStyle.lineSpacing = 0
+            paragraphStyle.lineHeightMultiple = 0
+            
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: NSFont.monospacedSystemFont(ofSize: 9, weight: .regular),
+                .foregroundColor: NSColor.labelColor,
+                .paragraphStyle: paragraphStyle,
+                .baselineOffset: 0
+            ]
+            
+            // Combine both lines into a single attributed string
+            let fullText = lines.joined(separator: "\n")
+            let fullAttributedString = NSAttributedString(string: fullText, attributes: attributes)
+            
+            button.attributedTitle = fullAttributedString
+            
+            // Configure button properties for proper centering
+            button.imagePosition = .noImage
+            button.alignment = .center
+            button.cell?.controlSize = .regular
+            
+            // Force button to recalculate its frame
+            button.needsLayout = true
+        } else {
+            // Fallback to regular title
+            button.title = text
         }
     }
     

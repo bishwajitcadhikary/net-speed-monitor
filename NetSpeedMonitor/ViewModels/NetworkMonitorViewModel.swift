@@ -68,22 +68,22 @@ class NetworkMonitorViewModel: ObservableObject {
     }
     
     private func updateMenuBarText(with speed: NetworkSpeed) {
-        // Create compact menu bar text
-        let uploadShort = formatForMenuBar(speed.upload)
-        let downloadShort = formatForMenuBar(speed.download)
+        // Create vertical layout menu bar text
+        let uploadFormatted = formatForMenuBar(speed.upload)
+        let downloadFormatted = formatForMenuBar(speed.download)
         
-        menuBarText = "↑\(uploadShort) ↓\(downloadShort)"
+        menuBarText = "↑ \(uploadFormatted)\n↓ \(downloadFormatted)"
     }
     
     private func formatForMenuBar(_ bytes: Double) -> String {
         if bytes >= 1024 * 1024 * 1024 {
-            return String(format: "%.1fG", bytes / (1024 * 1024 * 1024))
+            return String(format: "%.1f GB/s", bytes / (1024 * 1024 * 1024))
         } else if bytes >= 1024 * 1024 {
-            return String(format: "%.1fM", bytes / (1024 * 1024))
+            return String(format: "%.1f MB/s", bytes / (1024 * 1024))
         } else if bytes >= 1024 {
-            return String(format: "%.0fK", bytes / 1024)
+            return String(format: "%.0f KB/s", bytes / 1024)
         } else {
-            return String(format: "%.0f", bytes)
+            return String(format: "%.0f B/s", bytes)
         }
     }
     
