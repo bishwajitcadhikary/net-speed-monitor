@@ -54,16 +54,33 @@ jobs:
         
         # Copy the built app
         echo "Copying app from archive..."
-        cp -R NetSpeedMonitor.xcarchive/Products/Applications/NetSpeedMonitor.app NetSpeedMonitor.app/
+        echo "Archive contents:"
+        ls -la NetSpeedMonitor.xcarchive/Products/Applications/
         
-        # Verify the app was copied
-        if [ ! -d "NetSpeedMonitor.app/Contents" ]; then
-          echo "❌ Failed to copy app from archive"
-          ls -la NetSpeedMonitor.xcarchive/Products/Applications/
+        # Copy the app with better error handling
+        if [ -d "NetSpeedMonitor.xcarchive/Products/Applications/NetSpeedMonitor.app" ]; then
+          cp -R NetSpeedMonitor.xcarchive/Products/Applications/NetSpeedMonitor.app NetSpeedMonitor.app/
+          echo "✅ App copied successfully"
+        else
+          echo "❌ App not found in expected location"
+          echo "Available files:"
+          find NetSpeedMonitor.xcarchive -name "*.app" -type d
           exit 1
         fi
         
-        echo "✅ App copied successfully"
+        # Verify the app was copied (check for any .app structure)
+        if [ -d "NetSpeedMonitor.app" ] && [ -f "NetSpeedMonitor.app/Contents/Info.plist" ]; then
+          echo "✅ App verification passed"
+        else
+          echo "❌ App verification failed"
+          echo "NetSpeedMonitor.app contents:"
+          ls -la NetSpeedMonitor.app/ || echo "NetSpeedMonitor.app directory not found"
+          if [ -d "NetSpeedMonitor.app" ]; then
+            echo "NetSpeedMonitor.app/Contents contents:"
+            ls -la NetSpeedMonitor.app/Contents/ || echo "Contents directory not found"
+          fi
+          exit 1
+        fi
         
         # Create DMG
         echo "Creating DMG..."
