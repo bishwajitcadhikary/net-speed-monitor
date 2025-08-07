@@ -24,15 +24,9 @@ jobs:
       with:
         xcode-version: '16.2.0'
         
-    - name: Setup Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.2'
-        bundler-cache: true
-        
     - name: Install XcodeGen
       run: |
-        gem install xcodegen
+        brew install xcodegen
         
     - name: Generate Xcode project
       run: |
