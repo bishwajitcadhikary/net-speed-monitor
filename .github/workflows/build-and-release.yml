@@ -124,9 +124,7 @@ jobs:
           
           If you encounter any issues, please report them on GitHub:
           https://github.com/bishwajitcadhikary/net-speed-monitor/issues
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+          
     - name: Upload to existing release
       if: steps.check_release.outputs.exists == 'true'
       run: |
