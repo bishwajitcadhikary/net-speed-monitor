@@ -45,7 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @MainActor private func setupStatusBar() {
         // Create status bar item with fixed width for consistent layout
-        statusBarItem = NSStatusBar.system.statusItem(withLength: 200)
+        statusBarItem = NSStatusBar.system.statusItem(withLength: 80)
         
         if let button = statusBarItem.button {
             // Configure button for custom view
@@ -156,66 +156,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 // MARK: - Status Bar Content View
 struct StatusBarContentView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
-    @State private var isFirstToggleOn = true
-    @State private var isSecondToggleOn = false
     
     var body: some View {
         HStack(spacing: 6) {
-            // Leftmost icon (sun/brightness symbol)
-            Image(systemName: "sun.max.fill")
-                .font(.system(size: 11))
-                .foregroundColor(.primary)
-                .frame(width: 12, height: 12)
-            
-            // Ellipsis icon (three dots)
-            Image(systemName: "ellipsis")
-                .font(.system(size: 9))
-                .foregroundColor(.primary)
-                .frame(width: 10, height: 10)
-            
             // Traffic direction arrows
             VStack(spacing: 1) {
                 Image(systemName: "arrow.up")
-                    .font(.system(size: 7))
+                    .font(.system(size: 8))
                     .foregroundColor(.primary)
                 Image(systemName: "arrow.down")
-                    .font(.system(size: 7))
+                    .font(.system(size: 8))
                     .foregroundColor(.primary)
             }
-            .frame(width: 8, height: 16)
+            .frame(width: 10, height: 16)
             
             // Network speed values (vertically centered)
             VStack(spacing: 0) {
                 Text(formatSpeed(viewModel.networkStats.currentSpeed.upload))
-                    .font(.system(size: 8, design: .monospaced))
+                    .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.primary)
                     .frame(height: 10, alignment: .center)
                     .lineLimit(1)
                 Text(formatSpeed(viewModel.networkStats.currentSpeed.download))
-                    .font(.system(size: 8, design: .monospaced))
+                    .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.primary)
                     .frame(height: 10, alignment: .center)
                     .lineLimit(1)
             }
-            .frame(width: 40)
-            
-            Spacer()
-            
-            // Toggle switches on the right
-            VStack(spacing: 1) {
-                Toggle("", isOn: $isFirstToggleOn)
-                    .toggleStyle(SwitchToggleStyle())
-                    .scaleEffect(0.5)
-                    .labelsHidden()
-                    .frame(width: 20, height: 12)
-                
-                Toggle("", isOn: $isSecondToggleOn)
-                    .toggleStyle(SwitchToggleStyle())
-                    .scaleEffect(0.5)
-                    .labelsHidden()
-                    .frame(width: 20, height: 12)
-            }
-            .frame(width: 20, height: 24)
+            .frame(width: 45)
         }
         .frame(height: 20)
         .padding(.horizontal, 4)
