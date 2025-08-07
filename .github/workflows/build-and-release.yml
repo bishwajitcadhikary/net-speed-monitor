@@ -106,6 +106,10 @@ jobs:
     - name: Check if release exists
       id: check_release
       run: |
+        # Ensure GitHub CLI is authenticated
+        echo "Checking GitHub CLI authentication..."
+        gh auth status || echo "GitHub CLI not authenticated, will use default token"
+        
         # Check if release exists using GitHub API
         RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq '.id' 2>/dev/null || echo "not_found")
         if [ "$RELEASE_EXISTS" != "not_found" ]; then
@@ -121,8 +125,8 @@ jobs:
       run: |
         echo "Creating new release for tag: ${{ github.ref_name }}"
         
-        # Create release using GitHub CLI
-        gh release create ${{ github.ref_name }} \
+        # Try to create release using GitHub CLI first
+        if gh release create ${{ github.ref_name }} \
           --title "Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}" \
           --prerelease \
           --notes "## Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
@@ -155,11 +159,42 @@ jobs:
           ### 🐛 Reporting Issues
           
           If you encounter any issues, please report them on GitHub:
-          https://github.com/bishwajitcadhikary/net-speed-monitor/issues"
+          https://github.com/bishwajitcadhikary/net-speed-monitor/issues"; then
+          echo "✅ Release created successfully with GitHub CLI"
+        else
+          echo "⚠️ GitHub CLI failed, trying alternative approach..."
+          # Alternative approach using curl and GitHub API
+          RELEASE_DATA='{
+            "tag_name": "'${{ github.ref_name }}'",
+            "name": "Net Speed Monitor '${{ github.event.inputs.version || github.ref_name }}'",
+            "body": "## Net Speed Monitor '${{ github.event.inputs.version || github.ref_name }}'\n\n### ⚠️ Pre-release for Testing\n\nThis is a pre-release version for testing purposes. The app is **not code-signed** and **not notarized** by Apple.\n\n### 🔧 Installation\n\n1. Download the DMG file\n2. Open the DMG and drag Net Speed Monitor to Applications\n3. **Important**: Right-click the app → \"Open\" → \"Open\" to bypass Gatekeeper\n4. The app will work normally after the first launch\n\n### 📝 Notes\n\n- This build is for testing and development purposes\n- No code signing or Apple notarization applied\n- Users may see security warnings on first launch\n- This is normal for unsigned apps\n\n### 🚀 Features\n\n- Real-time network speed monitoring\n- Menu bar integration\n- Individual notification settings\n- Customizable preferences\n\n### 🐛 Reporting Issues\n\nIf you encounter any issues, please report them on GitHub:\nhttps://github.com/bishwajitcadhikary/net-speed-monitor/issues",
+            "prerelease": true
+          }'
+          
+          curl -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d "$RELEASE_DATA" \
+            https://api.github.com/repos/${{ github.repository }}/releases
+          
+          echo "✅ Release created successfully with GitHub API"
+        fi
         
         # Upload the DMG file
         echo "Uploading DMG to release..."
-        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }}
+        if gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }}; then
+          echo "✅ DMG uploaded successfully with GitHub CLI"
+        else
+          echo "⚠️ GitHub CLI upload failed, trying alternative approach..."
+          # Alternative upload approach
+          UPLOAD_URL="https://uploads.github.com/repos/${{ github.repository }}/releases/$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq '.id')/assets?name=NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg"
+          curl -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg \
+            "$UPLOAD_URL"
+          echo "✅ DMG uploaded successfully with GitHub API"
+        fi
         
         echo "✅ Release created and DMG uploaded successfully"
         
@@ -167,5 +202,17 @@ jobs:
       if: steps.check_release.outputs.exists == 'true'
       run: |
         echo "Uploading to existing release..."
-        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }} --clobber
-        echo "✅ DMG uploaded to existing release successfully"
+        if gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }} --clobber; then
+          echo "✅ DMG uploaded to existing release successfully"
+        else
+          echo "⚠️ GitHub CLI upload failed, trying alternative approach..."
+          # Alternative upload approach for existing release
+          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq '.id')
+          UPLOAD_URL="https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg"
+          curl -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Content-Type: application/octet-stream" \
+            --data-binary @NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg \
+            "$UPLOAD_URL"
+          echo "✅ DMG uploaded to existing release successfully with GitHub API"
+        fi
