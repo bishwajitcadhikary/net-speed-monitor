@@ -53,9 +53,20 @@ jobs:
         mkdir -p NetSpeedMonitor.app
         
         # Copy the built app
+        echo "Copying app from archive..."
         cp -R NetSpeedMonitor.xcarchive/Products/Applications/NetSpeedMonitor.app NetSpeedMonitor.app/
         
+        # Verify the app was copied
+        if [ ! -d "NetSpeedMonitor.app/Contents" ]; then
+          echo "❌ Failed to copy app from archive"
+          ls -la NetSpeedMonitor.xcarchive/Products/Applications/
+          exit 1
+        fi
+        
+        echo "✅ App copied successfully"
+        
         # Create DMG
+        echo "Creating DMG..."
         create-dmg \
           --volname "Net Speed Monitor" \
           --window-pos 200 120 \
@@ -66,7 +77,24 @@ jobs:
           --app-drop-link 425 120 \
           "NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg" \
           "NetSpeedMonitor.app"
+        
+        # Verify DMG was created
+        if [ ! -f "NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg" ]; then
+          echo "❌ Failed to create DMG"
+          exit 1
+        fi
+        
+        echo "✅ DMG created successfully: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg"
+        ls -la NetSpeedMonitor-*.dmg
           
+    - name: List files for debugging
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Files in current directory:"
+        ls -la
+        echo "DMG file check:"
+        ls -la NetSpeedMonitor-*.dmg || echo "No DMG file found"
+        
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -78,22 +106,26 @@ jobs:
     - name: Check if release exists
       id: check_release
       run: |
-        if gh release view ${{ github.ref_name }} --repo ${{ github.repository }} >/dev/null 2>&1; then
+        # Check if release exists using GitHub API
+        RELEASE_EXISTS=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} --jq '.id' 2>/dev/null || echo "not_found")
+        if [ "$RELEASE_EXISTS" != "not_found" ]; then
           echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Release already exists with ID: $RELEASE_EXISTS"
         else
           echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Release does not exist, will create new one"
         fi
         
     - name: Create Release
       if: steps.check_release.outputs.exists == 'false'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg
-        draft: false
-        prerelease: true
-        name: Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
-        body: |
-          ## Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
+      run: |
+        echo "Creating new release for tag: ${{ github.ref_name }}"
+        
+        # Create release using GitHub CLI
+        gh release create ${{ github.ref_name }} \
+          --title "Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}" \
+          --prerelease \
+          --notes "## Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
           
           ### ⚠️ Pre-release for Testing
           
@@ -103,7 +135,7 @@ jobs:
           
           1. Download the DMG file
           2. Open the DMG and drag Net Speed Monitor to Applications
-          3. **Important**: Right-click the app → "Open" → "Open" to bypass Gatekeeper
+          3. **Important**: Right-click the app → \"Open\" → \"Open\" to bypass Gatekeeper
           4. The app will work normally after the first launch
           
           ### 📝 Notes
@@ -123,9 +155,17 @@ jobs:
           ### 🐛 Reporting Issues
           
           If you encounter any issues, please report them on GitHub:
-          https://github.com/bishwajitcadhikary/net-speed-monitor/issues
-          
+          https://github.com/bishwajitcadhikary/net-speed-monitor/issues"
+        
+        # Upload the DMG file
+        echo "Uploading DMG to release..."
+        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }}
+        
+        echo "✅ Release created and DMG uploaded successfully"
+        
     - name: Upload to existing release
       if: steps.check_release.outputs.exists == 'true'
       run: |
-        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }}
+        echo "Uploading to existing release..."
+        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }} --clobber
+        echo "✅ DMG uploaded to existing release successfully"
