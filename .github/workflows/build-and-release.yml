@@ -32,12 +32,6 @@ jobs:
       run: |
         xcodegen generate
         
-    - name: Setup code signing
-      uses: apple-actions/import-codesigning-certs@v1
-      with:
-        p12-file-base64: ${{ secrets.P12_BASE64 }}
-        p12-password: ${{ secrets.P12_PASSWORD }}
-        
     - name: Build application
       run: |
         xcodebuild -project NetSpeedMonitor.xcodeproj \
@@ -47,12 +41,12 @@ jobs:
           -archivePath NetSpeedMonitor.xcarchive \
           archive \
           CODE_SIGN_STYLE=Manual \
-          CODE_SIGN_IDENTITY="Developer ID Application: ${{ secrets.DEVELOPER_ID }}" \
-          DEVELOPMENT_TEAM="${{ secrets.DEVELOPER_TEAM_ID }}"
+          CODE_SIGN_IDENTITY="" \
+          DEVELOPMENT_TEAM=""
           
     - name: Create DMG
       run: |
-        # Create DMG using create-dmg
+        # Install create-dmg
         brew install create-dmg
         
         # Create app bundle directory
@@ -64,7 +58,6 @@ jobs:
         # Create DMG
         create-dmg \
           --volname "Net Speed Monitor" \
-          --volicon "NetSpeedMonitor/Resources/Assets.xcassets/AppIcon.appiconset/icon_512x512.png" \
           --window-pos 200 120 \
           --window-size 600 300 \
           --icon-size 100 \
@@ -74,70 +67,52 @@ jobs:
           "NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg" \
           "NetSpeedMonitor.app"
           
-    - name: Notarize DMG
-      run: |
-        xcrun notarytool submit "NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg" \
-          --apple-id "${{ secrets.APPLE_ID }}" \
-          --password "${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}" \
-          --team-id "${{ secrets.DEVELOPER_TEAM_ID }}" \
-          --wait
-          
-    - name: Staple DMG
-      run: |
-        xcrun stapler staple "NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg"
-        
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}
         path: |
           NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg
-          NetSpeedMonitor.xcarchive
         retention-days: 30
-        
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}
-        path: artifacts
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/*.dmg
-        tag_name: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
+        files: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg
+        draft: false
+        prerelease: true
+        title: Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
         body: |
-          ## Net Speed Monitor ${{ github.ref_name }}
+          ## Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
           
-          ### What's New
-          - Network speed monitoring for macOS
-          - Menu bar integration
-          - Real-time bandwidth statistics
+          ### ⚠️ Pre-release for Testing
           
-          ### System Requirements
-          - macOS 15.0 or later
+          This is a pre-release version for testing purposes. The app is **not code-signed** and **not notarized** by Apple.
           
-          ### Installation
+          ### 🔧 Installation
+          
           1. Download the DMG file
           2. Open the DMG and drag Net Speed Monitor to Applications
-          3. Launch the app from Applications or Spotlight
+          3. **Important**: Right-click the app → "Open" → "Open" to bypass Gatekeeper
+          4. The app will work normally after the first launch
           
-          ### Features
-          - Monitor upload and download speeds
-          - Menu bar display
-          - Settings customization
-          - Background monitoring
+          ### 📝 Notes
           
-          ### Changes
-          See the [commit history](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for detailed changes.
-        draft: false
-        prerelease: false
+          - This build is for testing and development purposes
+          - No code signing or Apple notarization applied
+          - Users may see security warnings on first launch
+          - This is normal for unsigned apps
+          
+          ### 🚀 Features
+          
+          - Real-time network speed monitoring
+          - Menu bar integration
+          - Individual notification settings
+          - Customizable preferences
+          
+          ### 🐛 Reporting Issues
+          
+          If you encounter any issues, please report them on GitHub:
+          https://github.com/bishwajitcadhikary/net-speed-monitor/issues
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

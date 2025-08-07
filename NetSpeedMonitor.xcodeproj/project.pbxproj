@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -186,7 +186,6 @@
 			);
 			mainGroup = 74FDFFD1BE75E4F00F2C0938;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -411,7 +410,7 @@
 				B378C4DD84765FD12B0098BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		C64D8BD8266208C07DEA705E /* Build configuration list for PBXNativeTarget "NetSpeedMonitor" */ = {
 			isa = XCConfigurationList;
@@ -420,7 +419,7 @@
 				0941FD6A4692664D2773DC6A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
