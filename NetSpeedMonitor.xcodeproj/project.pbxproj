@@ -15,6 +15,7 @@
 		75AC29644B7D054C95604B86 /* NetworkData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67291986F89EFF560E5495E0 /* NetworkData.swift */; };
 		7A18EA99FBBFCEC07B5D3A06 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F3A9464F8EA96835DE5F53 /* SettingsView.swift */; };
 		805575766D09EEE018A06395 /* NetworkMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D99ECCFB9522B09DCE4D9E4 /* NetworkMonitorService.swift */; };
+		C7D94B48629F4ADDBD59AC93 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D436E3945494F6CA1CCB43D /* Assets.xcassets */; };
 		91284E3C492774A41A2ABBA5 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35448737F42533176C6F2247 /* ServiceManagement.framework */; };
 		D3555328C8B957BE7F1F424D /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04051004FA57399CC00F5442 /* MenuBarView.swift */; };
 		F6B3DF017B6801D39D6FCBD6 /* NetworkMonitorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B0BB3B612093B60DD29F7F /* NetworkMonitorViewModel.swift */; };
@@ -27,6 +28,7 @@
 		348C44FB50C1A4EE310A1E1C /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		35448737F42533176C6F2247 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		394C678F77E41C3440D3DE7C /* NetSpeedMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NetSpeedMonitor.entitlements; sourceTree = "<group>"; };
+		7D436E3945494F6CA1CCB43D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Resources/Assets.xcassets"; sourceTree = "<group>"; };
 		67291986F89EFF560E5495E0 /* NetworkData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkData.swift; sourceTree = "<group>"; };
 		8832BD81406CC220CC7FAA08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A4B0BB3B612093B60DD29F7F /* NetworkMonitorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitorViewModel.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 				8832BD81406CC220CC7FAA08 /* Info.plist */,
 				394C678F77E41C3440D3DE7C /* NetSpeedMonitor.entitlements */,
 				B627429D000552D955F06D70 /* NetSpeedMonitorApp.swift */,
+				7D436E3945494F6CA1CCB43D /* Assets.xcassets */,
 				C6FD4897673CEC045AF466B0 /* Models */,
 				781F75E6E86FB8DDB0281DE3 /* Services */,
 				C03D843D8144F237B83929C8 /* ViewModels */,
@@ -137,6 +140,7 @@
 			buildPhases = (
 				39FAC07D2B953E82E4479C14 /* Sources */,
 				F8F1E42B00DB3B2A46D92C62 /* Frameworks */,
+				F3325AD6C8F34512B5A707DA /* Resources */,
 			);
 			buildRules = (
 			);
@@ -198,6 +202,17 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F3325AD6C8F34512B5A707DA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C7D94B48629F4ADDBD59AC93 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		0941FD6A4692664D2773DC6A /* Release */ = {

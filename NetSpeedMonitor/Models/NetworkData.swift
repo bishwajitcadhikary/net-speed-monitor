@@ -15,7 +15,7 @@ struct NetworkSpeed {
     }
 }
 
-struct AppNetworkUsage {
+struct AppNetworkUsage: Equatable {
     let processID: Int32
     let processName: String
     let bundleIdentifier: String?
@@ -36,6 +36,13 @@ struct AppNetworkUsage {
         self.upload = upload.isFinite && upload >= 0 ? upload : 0
         self.download = download.isFinite && download >= 0 ? download : 0
         self.icon = icon
+    }
+    
+    // Custom Equatable implementation to ignore icon comparison
+    static func == (lhs: AppNetworkUsage, rhs: AppNetworkUsage) -> Bool {
+        return lhs.processID == rhs.processID &&
+               lhs.processName == rhs.processName &&
+               lhs.bundleIdentifier == rhs.bundleIdentifier
     }
 }
 

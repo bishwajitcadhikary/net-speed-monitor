@@ -238,6 +238,10 @@ class ProcessMonitor {
     private var task: Process?
     private var pipe: Pipe?
     private var buffer = ""
+    private var appCache: [String: AppNetworkUsage] = [:]
+    private var lastUpdateTime = Date()
+    private var isFirstUpdate = true
+    private var lastReturnedApps: [AppNetworkUsage] = []
 
     func start() {
         guard task == nil else { return }
@@ -268,13 +272,23 @@ class ProcessMonitor {
         task = nil
         pipe?.fileHandleForReading.readabilityHandler = nil
         pipe = nil
+        appCache.removeAll()
+        lastReturnedApps.removeAll()
+        isFirstUpdate = true
     }
 
     func getTopNetworkApps(limit: Int) -> [AppNetworkUsage] {
         let lines = buffer.components(separatedBy: .newlines)
         buffer = "" // Clear buffer after processing
 
-        var apps: [String: AppNetworkUsage] = [:]
+        let currentTime = Date()
+        let timeDiff = currentTime.timeIntervalSince(lastUpdateTime)
+        
+        // Use a minimum time difference to avoid division by zero
+        let effectiveTimeDiff = max(timeDiff, 0.1)
+
+        // Process current data
+        var currentAppData: [String: (upload: Double, download: Double, pid: Int32)] = [:]
 
         for line in lines {
             let components = line.components(separatedBy: ",")
@@ -286,26 +300,81 @@ class ProcessMonitor {
                 let processName = getProcessName(from: processNameWithPid)
                 let pid = getPid(from: processNameWithPid)
 
-                if var app = apps[processName] {
-                    app.upload += bytesOut
-                    app.download += bytesIn
-                    apps[processName] = app
-                } else {
-                    let bundleId = getBundleIdentifier(for: pid)
-                    let icon = NSImage.appIcon(for: pid) ?? NSImage.appIcon(for: bundleId ?? "")
-                    apps[processName] = AppNetworkUsage(
-                        processID: pid,
-                        processName: processName,
-                        bundleIdentifier: bundleId,
-                        upload: bytesOut,
-                        download: bytesIn,
-                        icon: icon
+                // Calculate speed (bytes per second)
+                let uploadSpeed = bytesOut / effectiveTimeDiff
+                let downloadSpeed = bytesIn / effectiveTimeDiff
+
+                if let existing = currentAppData[processName] {
+                    currentAppData[processName] = (
+                        upload: existing.upload + uploadSpeed,
+                        download: existing.download + downloadSpeed,
+                        pid: existing.pid
                     )
+                } else {
+                    currentAppData[processName] = (upload: uploadSpeed, download: downloadSpeed, pid: pid)
                 }
             }
         }
 
-        return Array(apps.values.sorted { $0.totalUsage > $1.totalUsage }.prefix(limit))
+        // Update app cache with current data
+        for (processName, data) in currentAppData {
+            if let existingApp = appCache[processName] {
+                // Update existing app with new usage data
+                var updatedApp = existingApp
+                updatedApp.upload = data.upload
+                updatedApp.download = data.download
+                appCache[processName] = updatedApp
+            } else {
+                // Create new app entry
+                let bundleId = getBundleIdentifier(for: data.pid)
+                let icon = NSImage.appIcon(for: data.pid) ?? NSImage.appIcon(for: bundleId ?? "")
+                appCache[processName] = AppNetworkUsage(
+                    processID: data.pid,
+                    processName: processName,
+                    bundleIdentifier: bundleId,
+                    upload: data.upload,
+                    download: data.download,
+                    icon: icon
+                )
+            }
+        }
+
+        // Set usage to zero for apps not in current data (but keep them in cache)
+        for (processName, app) in appCache {
+            if currentAppData[processName] == nil {
+                var updatedApp = app
+                updatedApp.upload = 0
+                updatedApp.download = 0
+                appCache[processName] = updatedApp
+            }
+        }
+
+        lastUpdateTime = currentTime
+        isFirstUpdate = false
+
+        let sortedApps = Array(appCache.values.sorted { $0.totalUsage > $1.totalUsage }.prefix(limit))
+        
+        // Only return new data if there are significant changes to prevent flickering
+        if isFirstUpdate || hasSignificantChanges(sortedApps) {
+            lastReturnedApps = sortedApps
+            return sortedApps
+        } else {
+            return lastReturnedApps
+        }
+    }
+    
+    private func hasSignificantChanges(_ newApps: [AppNetworkUsage]) -> Bool {
+        guard lastReturnedApps.count == newApps.count else { return true }
+        
+        for (index, newApp) in newApps.enumerated() {
+            let oldApp = lastReturnedApps[index]
+            if newApp.processID != oldApp.processID ||
+               abs(newApp.upload - oldApp.upload) > 100 || // 100 bytes/s threshold
+               abs(newApp.download - oldApp.download) > 100 {
+                return true
+            }
+        }
+        return false
     }
 
     private func getProcessName(from processNameWithPid: String) -> String {

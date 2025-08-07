@@ -157,23 +157,23 @@ struct TopAppsView: View {
                 
                 Spacer()
                 
-                Button("Refresh") {
-                    // Trigger manual refresh if needed
-                }
-                .buttonStyle(.borderless)
-                .font(.caption)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
+                Text("Auto-updating")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
             }
             
             ScrollView {
                 LazyVStack(spacing: 1) {
                     ForEach(Array(viewModel.getTopApps().enumerated()), id: \.element.processID) { index, app in
                         AppUsageRow(app: app, rank: index + 1, viewModel: viewModel)
+                            .transition(.opacity.combined(with: .scale))
                     }
                 }
             }
             .padding(.horizontal, 4)
+            .animation(.easeInOut(duration: 0.2), value: viewModel.getTopApps().map { $0.processID })
         }
     }
 }
@@ -226,6 +226,7 @@ struct AppUsageRow: View {
                         .foregroundColor(.orange)
                     Text(viewModel.formatSpeed(app.upload))
                         .font(.system(size: 10, design: .monospaced))
+                        .animation(.easeInOut(duration: 0.3), value: app.upload)
                 }
                 
                 HStack(spacing: 4) {
@@ -234,6 +235,7 @@ struct AppUsageRow: View {
                         .foregroundColor(.blue)
                     Text(viewModel.formatSpeed(app.download))
                         .font(.system(size: 10, design: .monospaced))
+                        .animation(.easeInOut(duration: 0.3), value: app.download)
                 }
             }
         }
@@ -243,6 +245,7 @@ struct AppUsageRow: View {
             RoundedRectangle(cornerRadius: 4)
                 .fill(rank % 2 == 0 ? Color.clear : Color(NSColor.controlBackgroundColor))
         )
+        .contentShape(Rectangle())
     }
 }
 

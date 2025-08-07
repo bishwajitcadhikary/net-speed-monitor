@@ -34,6 +34,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup popover
         setupPopover()
         
+        // Setup notification observers
+        setupNotificationObservers()
+        
         // Start monitoring
         viewModel.startMonitoring()
         
@@ -45,7 +48,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @MainActor private func setupStatusBar() {
-        statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Use fixed width to prevent continuous movement
+        let fixedWidth: CGFloat = 80 // Adjust this value as needed
+        statusBarItem = NSStatusBar.system.statusItem(withLength: fixedWidth)
         
         if let button = statusBarItem.button {
             button.title = "↑ -- KB/s\n↓ -- KB/s"
@@ -80,8 +85,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Create attributed string for multi-line support with proper centering
         let lines = text.components(separatedBy: "\n")
         if lines.count == 2 {
-            _ = NSMutableAttributedString()
-            
             // Create paragraph style for center alignment
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
@@ -106,11 +109,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.alignment = .center
             button.cell?.controlSize = .regular
             
-            // Force button to recalculate its frame
-            button.needsLayout = true
+            // Ensure the button maintains its fixed width
+            button.frame.size.width = 80
         } else {
             // Fallback to regular title
             button.title = text
+        }
+    }
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            forName: .openSettingsWindow,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            print("DEBUG: Received openSettingsWindow notification")
+            DispatchQueue.main.async {
+                self?.openSettings()
+            }
         }
     }
     
@@ -179,6 +195,7 @@ extension AppDelegate {
     }
 
     @objc func openSettings() {
+        print("DEBUG: openSettings() called")
         // Ensure we have a reference to the settings window.
         var settingsWindow: NSWindow?
 
@@ -196,14 +213,21 @@ extension AppDelegate {
             NSApp.activate(ignoringOtherApps: true)
         } else {
             // Otherwise, create a new settings window.
+            print("DEBUG: Creating SettingsView...")
             let settingsView = SettingsView(viewModel: viewModel)
+            print("DEBUG: SettingsView created, creating NSHostingController...")
             let hostingController = NSHostingController(rootView: settingsView)
+            print("DEBUG: NSHostingController created, creating NSWindow...")
             let newWindow = NSWindow(contentViewController: hostingController)
             newWindow.title = "Net Speed Monitor Settings"
-            newWindow.setContentSize(NSSize(width: 500, height: 400))
+            newWindow.setContentSize(NSSize(width: 550, height: 450))
+            newWindow.styleMask = [.titled, .closable, .resizable]
+            newWindow.center()
+            print("DEBUG: About to show window...")
             newWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             settingsWindow = newWindow
+            print("DEBUG: Settings window should be visible now")
         }
     }
 

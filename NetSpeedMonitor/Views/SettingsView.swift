@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
-    @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
     
     private let tabs = [
@@ -149,15 +148,15 @@ struct GeneralSettingsView: View {
                 
                 Spacer()
                 
-//                Button("Export Settings") {
-//                    exportSettings()
-//                }
-//                .buttonStyle(.bordered)
-//                
-//                Button("Import Settings") {
-//                    importSettings()
-//                }
-//                .buttonStyle(.bordered)
+                Button("Export Settings") {
+                    exportSettings()
+                }
+                .buttonStyle(.bordered)
+                
+                Button("Import Settings") {
+                    importSettings()
+                }
+                .buttonStyle(.bordered)
             }
         }
         .padding()
@@ -533,17 +532,17 @@ struct AboutSettingsView: View {
                     
                     HStack {
                         Button("Website") {
-                            NSWorkspace.shared.open(URL(string: "https://frolax.com")!)
+                            NSWorkspace.shared.open(URL(string: "https://frolax.agency")!)
                         }
                         .buttonStyle(.link)
                         
                         Button("GitHub") {
-                            NSWorkspace.shared.open(URL(string: "https://github.com/frolax/net-speed-monitor")!)
+                            NSWorkspace.shared.open(URL(string: "https://github.com/bishwajitcadhikary/net-speed-monitor")!)
                         }
                         .buttonStyle(.link)
                         
                         Button("Support") {
-                            NSWorkspace.shared.open(URL(string: "mailto:support@frolax.com")!)
+                            NSWorkspace.shared.open(URL(string: "mailto:bishwajitcadhikary@gmail.com")!)
                         }
                         .buttonStyle(.link)
                         
@@ -555,7 +554,7 @@ struct AboutSettingsView: View {
                 
                 // Copyright
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Copyright © 2024 Frolax. All rights reserved.")
+                    Text("Copyright © 2025 Frolax. All rights reserved.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     

@@ -80,14 +80,15 @@ class NetworkMonitorViewModel: ObservableObject {
     }
     
     private func formatForMenuBar(_ bytes: Double) -> String {
+        // Use fixed-width formatting to prevent layout shifts
         if bytes >= 1024 * 1024 * 1024 {
-            return String(format: "%.1f GB/s", bytes / (1024 * 1024 * 1024))
+            return String(format: "%6.1f GB/s", bytes / (1024 * 1024 * 1024))
         } else if bytes >= 1024 * 1024 {
-            return String(format: "%.1f MB/s", bytes / (1024 * 1024))
+            return String(format: "%6.1f MB/s", bytes / (1024 * 1024))
         } else if bytes >= 1024 {
-            return String(format: "%.0f KB/s", bytes / 1024)
+            return String(format: "%6.0f KB/s", bytes / 1024)
         } else {
-            return String(format: "%.0f B/s", bytes)
+            return String(format: "%6.0f B/s", bytes)
         }
     }
     
@@ -105,7 +106,9 @@ class NetworkMonitorViewModel: ObservableObject {
     }
     
     func getTopApps() -> [AppNetworkUsage] {
-        return Array(networkStats.topApps.prefix(settings.topAppsCount))
+        let apps = Array(networkStats.topApps.prefix(settings.topAppsCount))
+        // Ensure we return a stable array to prevent unnecessary view updates
+        return apps
     }
     
     // MARK: - Settings Actions
