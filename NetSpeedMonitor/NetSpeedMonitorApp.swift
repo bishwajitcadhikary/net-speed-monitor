@@ -170,20 +170,20 @@ struct StatusBarContentView: View {
             }
             .frame(width: 10, height: 16)
             
-            // Network speed values (vertically centered)
+            // Network speed values (right-aligned for proper justification)
             VStack(spacing: 0) {
                 Text(formatSpeed(viewModel.networkStats.currentSpeed.upload))
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.primary)
-                    .frame(height: 10, alignment: .center)
+                    .frame(height: 10, alignment: .trailing)
                     .lineLimit(1)
                 Text(formatSpeed(viewModel.networkStats.currentSpeed.download))
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(.primary)
-                    .frame(height: 10, alignment: .center)
+                    .frame(height: 10, alignment: .trailing)
                     .lineLimit(1)
             }
-            .frame(width: 45)
+            .frame(width: 45, alignment: .trailing)
         }
         .frame(height: 20)
         .padding(.horizontal, 4)
