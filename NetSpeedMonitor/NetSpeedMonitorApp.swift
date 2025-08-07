@@ -26,8 +26,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.orderOut(nil)
         }
         
-        
-        
         // Setup status bar
         setupStatusBar()
         
@@ -39,8 +37,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Start monitoring
         viewModel.startMonitoring()
-        
-        
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -48,53 +44,69 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @MainActor private func setupStatusBar() {
-        // Use a more stable approach similar to the original NetSpeedMonitor
-        // Calculate appropriate width based on expected text content
-        let expectedText = "↑ 999.9M\n↓ 999.9M"
-        let font = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
-        let textSize = expectedText.size(withAttributes: [.font: font])
-        let fixedWidth = max(textSize.width + 20, 70) // Add padding and minimum width
-        
-        statusBarItem = NSStatusBar.system.statusItem(withLength: fixedWidth)
+        // Create status bar item with fixed width for consistent layout
+        statusBarItem = NSStatusBar.system.statusItem(withLength: 200)
         
         if let button = statusBarItem.button {
-            button.title = "↑ --\n↓ --"
+            // Configure button for custom view
             button.action = #selector(togglePopover)
             button.target = self
             
-            // Configure button for proper vertical centering
-            button.imagePosition = .noImage
-            button.alignment = .center
-            if let cell = button.cell {
-                cell.controlSize = .regular
-                cell.font = font
-            }
+            // Create custom view for the status bar
+            let customView = createStatusBarView()
+            button.subviews.forEach { $0.removeFromSuperview() }
+            button.addSubview(customView)
+            
+            // Position the custom view
+            customView.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                customView.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 4),
+                customView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -4),
+                customView.topAnchor.constraint(equalTo: button.topAnchor, constant: 2),
+                customView.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -2)
+            ])
             
             // Add right-click context menu
             let contextMenu = createContextMenu()
             button.menu = contextMenu
             
-            // Update button text when view model changes
-            let cancellable = viewModel.$menuBarText
+            // Update status bar when view model changes
+            let cancellable = viewModel.$networkStats
                 .receive(on: DispatchQueue.main)
-                .sink { [weak self] text in
-                    self?.updateStatusBarButton(with: text)
+                .sink { [weak self] _ in
+                    self?.updateStatusBarView()
                 }
             viewModel.addCancellable(cancellable)
         }
     }
     
-    @MainActor private func updateStatusBarButton(with text: String) {
-        guard let button = statusBarItem.button else { return }
+    private func createStatusBarView() -> NSView {
+        let containerView = NSView()
+        containerView.wantsLayer = true
         
-        // Use simple title update for better stability
-        // This approach is more similar to the original NetSpeedMonitor
-        button.title = text
+        // Create the status bar content view
+        let contentView = StatusBarContentView(viewModel: viewModel)
+        let hostingView = NSHostingView(rootView: contentView)
         
-        // Ensure consistent button configuration
-        button.imagePosition = .noImage
-        button.alignment = .center
-        button.cell?.controlSize = .regular
+        containerView.addSubview(hostingView)
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            hostingView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+        
+        return containerView
+    }
+    
+    @MainActor private func updateStatusBarView() {
+        guard let button = statusBarItem.button,
+              let customView = button.subviews.first else { return }
+        
+        // Force redraw of the custom view
+        customView.needsDisplay = true
     }
     
     private func setupNotificationObservers() {
@@ -119,8 +131,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
     
-    
-    
     @objc private func togglePopover() {
         guard let button = statusBarItem.button else { return }
         
@@ -140,6 +150,109 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         togglePopover()
         return false
+    }
+}
+
+// MARK: - Status Bar Content View
+struct StatusBarContentView: View {
+    @ObservedObject var viewModel: NetworkMonitorViewModel
+    @State private var isFirstToggleOn = true
+    @State private var isSecondToggleOn = false
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            // Leftmost icon (sun/brightness symbol)
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 11))
+                .foregroundColor(.primary)
+                .frame(width: 12, height: 12)
+            
+            // Ellipsis icon (three dots)
+            Image(systemName: "ellipsis")
+                .font(.system(size: 9))
+                .foregroundColor(.primary)
+                .frame(width: 10, height: 10)
+            
+            // Traffic direction arrows
+            VStack(spacing: 1) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 7))
+                    .foregroundColor(.primary)
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 7))
+                    .foregroundColor(.primary)
+            }
+            .frame(width: 8, height: 16)
+            
+            // Network speed values (vertically centered)
+            VStack(spacing: 0) {
+                Text(formatSpeed(viewModel.networkStats.currentSpeed.upload))
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundColor(.primary)
+                    .frame(height: 10, alignment: .center)
+                    .lineLimit(1)
+                Text(formatSpeed(viewModel.networkStats.currentSpeed.download))
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundColor(.primary)
+                    .frame(height: 10, alignment: .center)
+                    .lineLimit(1)
+            }
+            .frame(width: 40)
+            
+            Spacer()
+            
+            // Toggle switches on the right
+            VStack(spacing: 1) {
+                Toggle("", isOn: $isFirstToggleOn)
+                    .toggleStyle(SwitchToggleStyle())
+                    .scaleEffect(0.5)
+                    .labelsHidden()
+                    .frame(width: 20, height: 12)
+                
+                Toggle("", isOn: $isSecondToggleOn)
+                    .toggleStyle(SwitchToggleStyle())
+                    .scaleEffect(0.5)
+                    .labelsHidden()
+                    .frame(width: 20, height: 12)
+            }
+            .frame(width: 20, height: 24)
+        }
+        .frame(height: 20)
+        .padding(.horizontal, 4)
+        .background(Color.clear)
+    }
+    
+    private func formatSpeed(_ bytes: Double) -> String {
+        // Handle invalid or zero values
+        guard bytes.isFinite && bytes >= 0 else {
+            return "0.0K"
+        }
+        
+        let value: Double
+        let unit: String
+        
+        if bytes >= 1024 * 1024 * 1024 {
+            value = bytes / (1024 * 1024 * 1024)
+            unit = "G"
+        } else if bytes >= 1024 * 1024 {
+            value = bytes / (1024 * 1024)
+            unit = "M"
+        } else if bytes >= 1024 {
+            value = bytes / 1024
+            unit = "K"
+        } else {
+            value = bytes
+            unit = "B"
+        }
+        
+        // Use compact format with consistent width
+        if value >= 100 {
+            return String(format: "%.0f%@", value, unit)
+        } else if value >= 10 {
+            return String(format: "%.1f%@", value, unit)
+        } else {
+            return String(format: "%.1f%@", value, unit)
+        }
     }
 }
 

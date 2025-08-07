@@ -1,20 +1,5 @@
 import SwiftUI
 
-struct MenuBarView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            Text(viewModel.menuBarText)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundColor(.primary)
-        }
-        .onTapGesture {
-            viewModel.togglePopover()
-        }
-    }
-}
-
 struct MenuBarContentView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     

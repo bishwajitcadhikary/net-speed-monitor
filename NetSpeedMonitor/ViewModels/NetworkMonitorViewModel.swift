@@ -11,7 +11,6 @@ extension Notification.Name {
 class NetworkMonitorViewModel: ObservableObject {
     @Published var networkStats = NetworkStats.empty
     @Published var isMonitoring = false
-    @Published var menuBarText = "-- KB/s"
     @Published var showingPopover = false
     @Published var showingSettings = false
     
@@ -38,7 +37,6 @@ class NetworkMonitorViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] stats in
                 self?.networkStats = stats
-                self?.updateMenuBarText(with: stats.currentSpeed)
                 self?.updateSpeedHistory(with: stats.currentSpeed)
                 self?.notificationService.checkForSpeedAlert(currentSpeed: stats.currentSpeed)
             }
@@ -50,7 +48,6 @@ class NetworkMonitorViewModel: ObservableObject {
             .sink { [weak self] settings in
                 guard let self = self else { return }
                 self.networkService.updateRefreshRate(settings.refreshRate.rawValue)
-                self.updateMenuBarText(with: self.networkStats.currentSpeed)
                 // Manually notify SwiftUI that the viewModel has changed to force view updates
                 self.objectWillChange.send()
             }
@@ -69,44 +66,6 @@ class NetworkMonitorViewModel: ObservableObject {
         
         isMonitoring = false
         networkService.stopMonitoring()
-    }
-    
-    private func updateMenuBarText(with speed: NetworkSpeed) {
-        // Create vertical layout menu bar text
-        let uploadFormatted = formatForMenuBar(speed.upload)
-        let downloadFormatted = formatForMenuBar(speed.download)
-        
-        menuBarText = "↑ \(uploadFormatted)\n↓ \(downloadFormatted)"
-    }
-    
-    private func formatForMenuBar(_ bytes: Double) -> String {
-        // Use a more stable formatting approach similar to the original NetSpeedMonitor
-        // This ensures consistent width and prevents layout shifts
-        let value: Double
-        let unit: String
-        
-        if bytes >= 1024 * 1024 * 1024 {
-            value = bytes / (1024 * 1024 * 1024)
-            unit = "G"
-        } else if bytes >= 1024 * 1024 {
-            value = bytes / (1024 * 1024)
-            unit = "M"
-        } else if bytes >= 1024 {
-            value = bytes / 1024
-            unit = "K"
-        } else {
-            value = bytes
-            unit = "B"
-        }
-        
-        // Use compact format with consistent width
-        if value >= 100 {
-            return String(format: "%.0f%@", value, unit)
-        } else if value >= 10 {
-            return String(format: "%.1f%@", value, unit)
-        } else {
-            return String(format: "%.1f%@", value, unit)
-        }
     }
     
     private func updateSpeedHistory(with speed: NetworkSpeed) {

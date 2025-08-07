@@ -227,7 +227,7 @@ struct DisplaySettingsView: View {
                     
                     HStack {
                         Text("Current: ")
-                        Text(viewModel.menuBarText)
+                        Text("Custom Status Bar")
                             .font(.system(size: 11, design: .monospaced))
                             .padding(4)
                             .background(Color.gray.opacity(0.2))
@@ -235,7 +235,7 @@ struct DisplaySettingsView: View {
                         Spacer()
                     }
                     
-                    Text("The menu bar shows upload (↑) and download (↓) speeds in a compact format.")
+                    Text("The menu bar shows network speeds with icons, arrows, and toggle switches in a modern layout.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
