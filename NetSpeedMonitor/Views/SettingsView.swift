@@ -167,7 +167,7 @@ struct GeneralSettingsView: View {
         
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.json]
-        savePanel.nameFieldStringValue = "NetSpeedMonitor-Settings.json"
+        savePanel.nameFieldStringValue = "NetSpeedMonitor.json"
         
         savePanel.begin { result in
             if result == .OK, let url = savePanel.url {

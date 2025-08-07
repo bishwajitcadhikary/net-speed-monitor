@@ -80,15 +80,32 @@ class NetworkMonitorViewModel: ObservableObject {
     }
     
     private func formatForMenuBar(_ bytes: Double) -> String {
-        // Use fixed-width formatting to prevent layout shifts
+        // Use a more stable formatting approach similar to the original NetSpeedMonitor
+        // This ensures consistent width and prevents layout shifts
+        let value: Double
+        let unit: String
+        
         if bytes >= 1024 * 1024 * 1024 {
-            return String(format: "%6.1f GB/s", bytes / (1024 * 1024 * 1024))
+            value = bytes / (1024 * 1024 * 1024)
+            unit = "G"
         } else if bytes >= 1024 * 1024 {
-            return String(format: "%6.1f MB/s", bytes / (1024 * 1024))
+            value = bytes / (1024 * 1024)
+            unit = "M"
         } else if bytes >= 1024 {
-            return String(format: "%6.0f KB/s", bytes / 1024)
+            value = bytes / 1024
+            unit = "K"
         } else {
-            return String(format: "%6.0f B/s", bytes)
+            value = bytes
+            unit = "B"
+        }
+        
+        // Use compact format with consistent width
+        if value >= 100 {
+            return String(format: "%.0f%@", value, unit)
+        } else if value >= 10 {
+            return String(format: "%.1f%@", value, unit)
+        } else {
+            return String(format: "%.1f%@", value, unit)
         }
     }
     

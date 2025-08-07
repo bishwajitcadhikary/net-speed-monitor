@@ -48,12 +48,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @MainActor private func setupStatusBar() {
-        // Use fixed width to prevent continuous movement
-        let fixedWidth: CGFloat = 80 // Adjust this value as needed
+        // Use a more stable approach similar to the original NetSpeedMonitor
+        // Calculate appropriate width based on expected text content
+        let expectedText = "↑ 999.9M\n↓ 999.9M"
+        let font = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
+        let textSize = expectedText.size(withAttributes: [.font: font])
+        let fixedWidth = max(textSize.width + 20, 70) // Add padding and minimum width
+        
         statusBarItem = NSStatusBar.system.statusItem(withLength: fixedWidth)
         
         if let button = statusBarItem.button {
-            button.title = "↑ -- KB/s\n↓ -- KB/s"
+            button.title = "↑ --\n↓ --"
             button.action = #selector(togglePopover)
             button.target = self
             
@@ -62,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.alignment = .center
             if let cell = button.cell {
                 cell.controlSize = .regular
-                cell.font = NSFont.monospacedSystemFont(ofSize: 9, weight: .regular)
+                cell.font = font
             }
             
             // Add right-click context menu
@@ -82,39 +87,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor private func updateStatusBarButton(with text: String) {
         guard let button = statusBarItem.button else { return }
         
-        // Create attributed string for multi-line support with proper centering
-        let lines = text.components(separatedBy: "\n")
-        if lines.count == 2 {
-            // Create paragraph style for center alignment
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.alignment = .center
-            paragraphStyle.lineSpacing = 0
-            paragraphStyle.lineHeightMultiple = 0
-            
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: NSFont.monospacedSystemFont(ofSize: 9, weight: .regular),
-                .foregroundColor: NSColor.labelColor,
-                .paragraphStyle: paragraphStyle,
-                .baselineOffset: 0
-            ]
-            
-            // Combine both lines into a single attributed string
-            let fullText = lines.joined(separator: "\n")
-            let fullAttributedString = NSAttributedString(string: fullText, attributes: attributes)
-            
-            button.attributedTitle = fullAttributedString
-            
-            // Configure button properties for proper centering
-            button.imagePosition = .noImage
-            button.alignment = .center
-            button.cell?.controlSize = .regular
-            
-            // Ensure the button maintains its fixed width
-            button.frame.size.width = 80
-        } else {
-            // Fallback to regular title
-            button.title = text
-        }
+        // Use simple title update for better stability
+        // This approach is more similar to the original NetSpeedMonitor
+        button.title = text
+        
+        // Ensure consistent button configuration
+        button.imagePosition = .noImage
+        button.alignment = .center
+        button.cell?.controlSize = .regular
     }
     
     private func setupNotificationObservers() {
