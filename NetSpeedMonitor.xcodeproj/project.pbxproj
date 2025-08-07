@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,9 +15,9 @@
 		75AC29644B7D054C95604B86 /* NetworkData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67291986F89EFF560E5495E0 /* NetworkData.swift */; };
 		7A18EA99FBBFCEC07B5D3A06 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8F3A9464F8EA96835DE5F53 /* SettingsView.swift */; };
 		805575766D09EEE018A06395 /* NetworkMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D99ECCFB9522B09DCE4D9E4 /* NetworkMonitorService.swift */; };
-		C7D94B48629F4ADDBD59AC93 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D436E3945494F6CA1CCB43D /* Assets.xcassets */; };
 		91284E3C492774A41A2ABBA5 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 35448737F42533176C6F2247 /* ServiceManagement.framework */; };
 		D3555328C8B957BE7F1F424D /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04051004FA57399CC00F5442 /* MenuBarView.swift */; };
+		DE1303956EC9C5F54162AE32 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55C755751C0C58759CCA2287 /* Assets.xcassets */; };
 		F6B3DF017B6801D39D6FCBD6 /* NetworkMonitorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B0BB3B612093B60DD29F7F /* NetworkMonitorViewModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -28,7 +28,7 @@
 		348C44FB50C1A4EE310A1E1C /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		35448737F42533176C6F2247 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		394C678F77E41C3440D3DE7C /* NetSpeedMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NetSpeedMonitor.entitlements; sourceTree = "<group>"; };
-		7D436E3945494F6CA1CCB43D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Resources/Assets.xcassets"; sourceTree = "<group>"; };
+		55C755751C0C58759CCA2287 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		67291986F89EFF560E5495E0 /* NetworkData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkData.swift; sourceTree = "<group>"; };
 		8832BD81406CC220CC7FAA08 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A4B0BB3B612093B60DD29F7F /* NetworkMonitorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitorViewModel.swift; sourceTree = "<group>"; };
@@ -81,6 +81,14 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		B4C45B02C45B1763EC44C2E1 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				55C755751C0C58759CCA2287 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		C03D843D8144F237B83929C8 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -122,8 +130,8 @@
 				8832BD81406CC220CC7FAA08 /* Info.plist */,
 				394C678F77E41C3440D3DE7C /* NetSpeedMonitor.entitlements */,
 				B627429D000552D955F06D70 /* NetSpeedMonitorApp.swift */,
-				7D436E3945494F6CA1CCB43D /* Assets.xcassets */,
 				C6FD4897673CEC045AF466B0 /* Models */,
+				B4C45B02C45B1763EC44C2E1 /* Resources */,
 				781F75E6E86FB8DDB0281DE3 /* Services */,
 				C03D843D8144F237B83929C8 /* ViewModels */,
 				6724AC67E78709F61C22A124 /* Views */,
@@ -139,8 +147,8 @@
 			buildConfigurationList = C64D8BD8266208C07DEA705E /* Build configuration list for PBXNativeTarget "NetSpeedMonitor" */;
 			buildPhases = (
 				39FAC07D2B953E82E4479C14 /* Sources */,
+				C8A9943558A5131694FF8251 /* Resources */,
 				F8F1E42B00DB3B2A46D92C62 /* Frameworks */,
-				F3325AD6C8F34512B5A707DA /* Resources */,
 			);
 			buildRules = (
 			);
@@ -160,7 +168,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					0C0B429DA22B06451B264C65 = {
 						DevelopmentTeam = "";
@@ -170,7 +178,7 @@
 			};
 			buildConfigurationList = A61E1A50FD04D3AB241CE634 /* Build configuration list for PBXProject "NetSpeedMonitor" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = "en-US";
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
@@ -178,6 +186,7 @@
 			);
 			mainGroup = 74FDFFD1BE75E4F00F2C0938;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -185,6 +194,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C8A9943558A5131694FF8251 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE1303956EC9C5F54162AE32 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		39FAC07D2B953E82E4479C14 /* Sources */ = {
@@ -203,17 +223,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXResourcesBuildPhase section */
-		F3325AD6C8F34512B5A707DA /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C7D94B48629F4ADDBD59AC93 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin XCBuildConfiguration section */
 		0941FD6A4692664D2773DC6A /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -222,7 +231,6 @@
 				CODE_SIGN_ENTITLEMENTS = NetSpeedMonitor/NetSpeedMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = NetSpeedMonitor/Info.plist;
@@ -243,7 +251,6 @@
 				CODE_SIGN_ENTITLEMENTS = NetSpeedMonitor/NetSpeedMonitor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = NetSpeedMonitor/Info.plist;
@@ -293,12 +300,10 @@
 				CODE_SIGN_ENTITLEMENTS = NetSpeedMonitor/NetSpeedMonitor.entitlements;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -360,12 +365,10 @@
 				CODE_SIGN_ENTITLEMENTS = NetSpeedMonitor/NetSpeedMonitor.entitlements;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;

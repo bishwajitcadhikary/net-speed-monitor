@@ -1,265 +1,140 @@
 # Net Speed Monitor
 
-A lightweight, native macOS application that provides real-time network speed monitoring in your menu bar with detailed per-app bandwidth usage statistics.
-
-![Menu Bar Display](https://via.placeholder.com/200x50/000000/FFFFFF?text=↑1.2M+↓5.4M)
+A macOS menu bar application that monitors and displays real-time network bandwidth statistics.
 
 ## Features
 
-### 🔹 Menu Bar Display
-- **Real-time Upload/Download speeds** in menu bar
-- **Auto-scaling units**: Automatically switches between B/s, KB/s, MB/s, GB/s
-- **Compact display**: Minimal UI that doesn't clutter your menu bar
-- **Live updates**: Configurable refresh rates (1s, 5s, 10s)
+- 📊 Real-time upload and download speed monitoring
+- 🍎 Native macOS menu bar integration
+- ⚙️ Customizable settings and preferences
+- 🔄 Background monitoring with minimal resource usage
+- 🎨 Clean, modern SwiftUI interface
+- 📱 Support for macOS 15.0+
 
-### 🔹 Detailed Popup Interface
-- **Real-time bandwidth graph** with upload/download visualization
-- **Top N apps** using most bandwidth (configurable: 5, 10, 20, etc.)
-- **Per-app statistics**: Shows app name, PID, icon, upload & download speeds
-- **Network information**: Active interface, IP addresses, ping to 8.8.8.8
-- **Sortable by usage**: Apps automatically sorted by total bandwidth usage
+## Screenshots
 
-### 🔹 Comprehensive Settings
-- **Unit preferences**: Choose between KB/s, MB/s, Mbps, or Auto
-- **Refresh rate control**: 1-second to 10-second intervals
-- **Launch at login**: Seamless startup integration
-- **Top apps count**: Configure how many apps to display
-- **Dark/light mode** toggle
-- **Export/Import settings** for easy backup and sharing
-
-### 🔹 Smart Notifications
-- **Speed drop alerts**: Get notified when speeds fall below threshold
-- **Interface change alerts**: Know when switching between Wi-Fi/Ethernet
-- **Configurable thresholds**: Set custom MB/s limits
-- **Notification cooldown**: Prevent spam with intelligent timing
-
-### 🔹 Privacy & Performance
-- **No root access required**: Uses only non-privileged system APIs
-- **Sandbox compliant**: Secure implementation with proper entitlements
-- **Low resource usage**: Optimized async operations, minimal CPU/memory impact
-- **Native Swift**: Built with Swift 5.10+ and SwiftUI for macOS 15.0+
-
-## System Requirements
-
-- **macOS Sequoia 15.0** or later (includes macOS Tahoe 16.0+ support)
-- **Universal Binary**: Native support for both Intel and Apple Silicon Macs
-- **Architecture**: ARM64 and x86_64 supported
+*Screenshots will be added here*
 
 ## Installation
 
-### Option 1: Direct Download
-1. Download the latest `NetSpeedMonitor-1.0.0.dmg` from releases
-2. Open the DMG file
-3. Drag `NetSpeedMonitor.app` to your Applications folder
-4. Launch from Applications or Spotlight
+### From Release
+1. Download the latest DMG from the [Releases](https://github.com/your-username/net-speed-monitor/releases) page
+2. Open the DMG and drag Net Speed Monitor to Applications
+3. Launch the app from Applications or Spotlight
 
-### Option 2: Build from Source
-```bash
-# Clone the repository
-git clone https://github.com/frolax/net-speed-monitor.git
-cd net-speed-monitor
+### From Source
+1. Clone the repository
+   ```bash
+   git clone https://github.com/your-username/net-speed-monitor.git
+   cd net-speed-monitor
+   ```
 
-# Install xcodegen (if not already installed)
-brew install xcodegen
+2. Install XcodeGen (if not already installed)
+   ```bash
+   gem install xcodegen
+   ```
 
-# Generate Xcode project
-xcodegen
+3. Generate Xcode project
+   ```bash
+   xcodegen generate
+   ```
 
-# Build the project
-xcodebuild -project NetSpeedMonitor.xcodeproj -scheme NetSpeedMonitor -configuration Release build
+4. Open the project in Xcode
+   ```bash
+   open NetSpeedMonitor.xcodeproj
+   ```
 
-# Create distribution package
-./create_dmg.sh
-```
-
-## Usage
-
-### First Launch
-1. **Grant permissions**: macOS may prompt for network monitoring permissions
-2. **Menu bar icon**: Look for the network speed indicator in your menu bar
-3. **Click to explore**: Click the menu bar item to see detailed statistics
-
-### Basic Operation
-- **Menu bar display**: Shows current upload (↑) and download (↓) speeds
-- **Click for details**: Access full interface with app breakdown and settings
-- **Right-click menu**: Quick access to settings and quit options
-
-### Keyboard Shortcuts
-- **⌘,** - Open Settings (when popup is active)
-- **⌘Q** - Quit application (when popup is active)
-
-## Technical Implementation
-
-### Core Technologies
-- **Swift 5.10+**: Modern Swift with latest language features
-- **SwiftUI**: Native macOS 15.0+ user interface framework
-- **Network.framework**: Apple's modern networking APIs
-- **Combine**: Reactive programming for real-time updates
-- **Swift Concurrency**: Async/await for performance optimization
-
-### Network Monitoring
-- **Network.framework**: Interface monitoring and status detection
-- **nettop integration**: Per-app bandwidth parsing via JSON output
-- **ICMP ping**: Network latency measurement to 8.8.8.8
-- **Interface detection**: Automatic Wi-Fi/Ethernet/Cellular recognition
-
-### Data Collection Methods
-```swift
-// Network interface monitoring
-NWPathMonitor() // Real-time interface status
-getifaddrs()    // Low-level interface statistics
-
-// Per-app bandwidth tracking  
-nettop -P -x -J // JSON output parsing
-NSWorkspace    // App icon and bundle ID resolution
-
-// System integration
-ServiceManagement // Launch at login functionality
-UserNotifications // Speed and interface change alerts
-```
-
-### Privacy & Security
-- **Sandbox enabled**: App runs in macOS application sandbox
-- **Minimal permissions**: Only network monitoring entitlements
-- **No admin access**: Uses only user-level system APIs
-- **Local processing**: All data processing happens locally
-
-## Project Structure
-
-```
-NetSpeedMonitor/
-├── Models/
-│   └── NetworkData.swift          # Data models and structures
-├── Views/
-│   ├── MenuBarView.swift          # Menu bar interface and popup
-│   └── SettingsView.swift         # Settings panel with tabs
-├── ViewModels/
-│   └── NetworkMonitorViewModel.swift # Main coordinator and state
-├── Services/
-│   ├── NetworkMonitorService.swift   # Network monitoring logic
-│   └── SettingsService.swift         # Settings and preferences
-├── Utilities/
-├── Resources/
-├── NetSpeedMonitorApp.swift       # Main app and AppDelegate
-├── Info.plist                     # App configuration
-└── NetSpeedMonitor.entitlements   # Sandbox permissions
-```
-
-## Build Configuration
-
-### Xcode Project Generation
-The project uses `xcodegen` for maintaining the Xcode project:
-
-```yaml
-# project.yml
-name: NetSpeedMonitor
-deploymentTarget:
-  macOS: "15.0"
-settings:
-  SWIFT_VERSION: "5.10"
-  MACOSX_DEPLOYMENT_TARGET: "15.0"
-```
-
-### Code Signing
-- **Automatic signing**: Uses Xcode's automatic code signing
-- **Hardened runtime**: Enabled for enhanced security
-- **Entitlements**: Minimal required permissions for network monitoring
+5. Build and run the project
 
 ## Development
 
 ### Prerequisites
-- Xcode 16.0+ (for macOS 15.0+ SDK)
-- Swift 5.10+
-- macOS 15.0+ for testing
+- Xcode 16.0 or later
+- macOS 15.0 or later
+- Ruby 3.2+ (for XcodeGen)
+
+### Project Structure
+```
+NetSpeedMonitor/
+├── Models/
+│   └── NetworkData.swift          # Data models
+├── Services/
+│   ├── NetworkMonitorService.swift # Network monitoring logic
+│   └── SettingsService.swift      # User preferences
+├── ViewModels/
+│   └── NetworkMonitorViewModel.swift # MVVM view model
+├── Views/
+│   ├── MenuBarView.swift          # Menu bar interface
+│   └── SettingsView.swift         # Settings window
+└── Resources/
+    └── Assets.xcassets/           # App icons and assets
+```
 
 ### Building
+The project uses XcodeGen to generate the Xcode project from `project.yml`. To rebuild the project:
+
 ```bash
-# Install dependencies
-brew install xcodegen
-
-# Generate project
-xcodegen
-
-# Build debug version
-xcodebuild -project NetSpeedMonitor.xcodeproj -scheme NetSpeedMonitor -configuration Debug build
-
-# Build release version  
-xcodebuild -project NetSpeedMonitor.xcodeproj -scheme NetSpeedMonitor -configuration Release build
+xcodegen generate
 ```
 
-### Testing
-- **Unit tests**: Core networking and data processing logic
-- **UI tests**: SwiftUI interface interactions
-- **Performance tests**: Memory and CPU usage validation
-- **Integration tests**: System API interaction verification
+## GitHub Actions
 
-## Distribution
+This project includes automated build and release workflows:
 
-### DMG Creation
-```bash
-# Create distribution package
-./create_dmg.sh
+### Build Workflow
+- Automatically builds on push to main/develop branches
+- Runs on pull requests
+- Creates build artifacts for testing
+- No code signing required
 
-# Output: NetSpeedMonitor-1.0.0.dmg
-```
+### Release Workflow
+- Triggers on version tags (e.g., v1.0.0)
+- Code signs and notarizes the application
+- Creates a DMG installer
+- Publishes GitHub releases
 
-### Release Signing
-For distribution outside the Mac App Store:
-1. **Developer ID Application** certificate required
-2. **Notarization** through Apple for Gatekeeper compatibility
-3. **Hardened runtime** with necessary entitlements
+For detailed setup instructions, see [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md).
 
-## Roadmap
+## Configuration
 
-### Planned Features
-- [ ] **Historical data**: Daily/weekly/monthly usage statistics
-- [ ] **Export data**: CSV export of usage statistics  
-- [ ] **Advanced filtering**: Hide system processes, filter by app type
-- [ ] **Connection inspector**: Remote IP:port details per app
-- [ ] **Multiple interfaces**: Separate tracking for different networks
-- [ ] **Bandwidth limits**: Per-app usage warnings and limits
-- [ ] **Menu bar customization**: Configurable display format
+### Code Signing
+To build for distribution, you'll need:
+- Apple Developer Account
+- Developer ID certificate
+- App-specific password for notarization
 
-### Advanced Features
-- [ ] **Network quality**: Latency, jitter, packet loss monitoring
-- [ ] **VPN detection**: Identify and track VPN usage
-- [ ] **Hotspot monitoring**: Track mobile hotspot data usage
-- [ ] **Smart notifications**: ML-based anomaly detection
-- [ ] **Widget support**: macOS dashboard widget integration
+See the [GitHub Actions Setup](docs/GITHUB_ACTIONS_SETUP.md) guide for detailed instructions.
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes with proper tests
-4. Submit a pull request
-
-### Code Style
-- **Swift style guide**: Follow Apple's Swift style conventions
-- **SwiftUI patterns**: Use modern SwiftUI declarative patterns
-- **Documentation**: Comprehensive inline documentation required
-- **Testing**: Unit tests for all business logic
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/frolax/net-speed-monitor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/frolax/net-speed-monitor/discussions)
-- **Email**: support@frolax.com
-
 ## Acknowledgments
 
-- **Apple**: For excellent networking frameworks and development tools
-- **macOS Community**: For inspiration and feedback on menu bar applications
-- **Open Source**: Built with open source tools and libraries
+- Built with SwiftUI and Combine
+- Uses Network framework for bandwidth monitoring
+- Icons designed for macOS menu bar integration
 
----
+## Support
 
-**Net Speed Monitor** - Real-time network monitoring for macOS  
-© 2024 Frolax. All rights reserved.
+If you encounter any issues or have questions:
+1. Check the [Issues](https://github.com/your-username/net-speed-monitor/issues) page
+2. Create a new issue with detailed information
+3. Include your macOS version and app version
+
+## Roadmap
+
+- [ ] Dark mode support
+- [ ] Multiple network interface monitoring
+- [ ] Historical data and graphs
+- [ ] Export functionality
+- [ ] Widget support
+- [ ] Localization

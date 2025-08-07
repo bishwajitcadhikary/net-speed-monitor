@@ -117,8 +117,20 @@ class NetworkMonitorViewModel: ObservableObject {
         settingsService.updateNotificationDuration(duration)
     }
     
-    func updateDarkMode(_ enabled: Bool) {
-        settingsService.updateDarkMode(enabled)
+    func updateSpeedAlertNotifications(_ enabled: Bool) {
+        settingsService.updateSpeedAlertNotifications(enabled)
+    }
+    
+    func updateInterfaceChangeNotifications(_ enabled: Bool) {
+        settingsService.updateInterfaceChangeNotifications(enabled)
+    }
+    
+    func updateConnectionStatusNotifications(_ enabled: Bool) {
+        settingsService.updateConnectionStatusNotifications(enabled)
+    }
+    
+    func updateTheme(_ theme: AppSettings.Theme) {
+        settingsService.updateTheme(theme)
     }
     
     func resetSettings() {

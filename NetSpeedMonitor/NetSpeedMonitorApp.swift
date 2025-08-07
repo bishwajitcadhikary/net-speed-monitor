@@ -44,8 +44,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @MainActor private func setupStatusBar() {
-        // Create status bar item with fixed width for consistent layout
-        statusBarItem = NSStatusBar.system.statusItem(withLength: 80)
+                 // Create status bar item with fixed width for consistent layout
+         statusBarItem = NSStatusBar.system.statusItem(withLength: 90)
         
         if let button = statusBarItem.button {
             // Configure button for custom view
@@ -124,7 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupPopover() {
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 400, height: 500)
+        popover.contentSize = NSSize(width: 450, height: 550)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: MenuBarContentView(viewModel: viewModel)
@@ -158,7 +158,7 @@ struct StatusBarContentView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 0) {
             // Traffic direction arrows
             VStack(spacing: 1) {
                 Image(systemName: "arrow.up")
@@ -170,58 +170,56 @@ struct StatusBarContentView: View {
             }
             .frame(width: 10, height: 16)
             
-            // Network speed values (right-aligned for proper justification)
-            VStack(spacing: 0) {
-                Text(formatSpeed(viewModel.networkStats.currentSpeed.upload))
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(.primary)
-                    .frame(height: 10, alignment: .trailing)
-                    .lineLimit(1)
-                Text(formatSpeed(viewModel.networkStats.currentSpeed.download))
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(.primary)
-                    .frame(height: 10, alignment: .trailing)
-                    .lineLimit(1)
-            }
-            .frame(width: 45, alignment: .trailing)
+                         // Network speed values (right-aligned for proper justification)
+             VStack(spacing: 0) {
+                 Text(formatSpeed(viewModel.networkStats.currentSpeed.upload))
+                     .font(.system(size: 9, design: .monospaced))
+                     .foregroundColor(.primary)
+                     .frame(height: 10, alignment: .trailing)
+                     .lineLimit(1)
+                 Text(formatSpeed(viewModel.networkStats.currentSpeed.download))
+                     .font(.system(size: 9, design: .monospaced))
+                     .foregroundColor(.primary)
+                     .frame(height: 10, alignment: .trailing)
+                     .lineLimit(1)
+             }
+             .frame(width: 55, alignment: .trailing)
         }
         .frame(height: 20)
         .padding(.horizontal, 1)
         .background(Color.clear)
     }
     
-    private func formatSpeed(_ bytes: Double) -> String {
-        // Handle invalid or zero values
-        guard bytes.isFinite && bytes >= 0 else {
-            return "0.0K"
-        }
-        
-        let value: Double
-        let unit: String
-        
-        if bytes >= 1024 * 1024 * 1024 {
-            value = bytes / (1024 * 1024 * 1024)
-            unit = "G"
-        } else if bytes >= 1024 * 1024 {
-            value = bytes / (1024 * 1024)
-            unit = "M"
-        } else if bytes >= 1024 {
-            value = bytes / 1024
-            unit = "K"
-        } else {
-            value = bytes
-            unit = "B"
-        }
-        
-        // Use compact format with consistent width
-        if value >= 100 {
-            return String(format: "%.0f%@", value, unit)
-        } else if value >= 10 {
-            return String(format: "%.1f%@", value, unit)
-        } else {
-            return String(format: "%.1f%@", value, unit)
-        }
-    }
+         private func formatSpeed(_ bytes: Double) -> String {
+         // Handle invalid or zero values
+         guard bytes.isFinite && bytes >= 0 else {
+             return "0.0KB"
+         }
+         
+         let value: Double
+         let unit: String
+         
+         if bytes >= 1024 * 1024 * 1024 {
+             value = bytes / (1024 * 1024 * 1024)
+             unit = "GB"
+         } else if bytes >= 1024 * 1024 {
+             value = bytes / (1024 * 1024)
+             unit = "MB"
+         } else {
+             // Always show KB for anything less than 1MB, including bytes
+             value = max(bytes / 1024, 0.1) // Minimum 0.1KB to avoid showing 0.0KB
+             unit = "KB"
+         }
+         
+         // Use compact format with consistent width
+         if value >= 100 {
+             return String(format: "%.0f%@", value, unit)
+         } else if value >= 10 {
+             return String(format: "%.1f%@", value, unit)
+         } else {
+             return String(format: "%.1f%@", value, unit)
+         }
+     }
 }
 
 // MARK: - Extensions

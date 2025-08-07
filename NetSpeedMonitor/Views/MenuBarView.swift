@@ -24,7 +24,7 @@ struct MenuBarContentView: View {
             // Footer with controls
             FooterView(viewModel: viewModel)
         }
-        .frame(width: 400)
+        .frame(width: 450)
         .background(Color(NSColor.windowBackgroundColor))
     }
 }
@@ -68,7 +68,7 @@ struct HeaderView: View {
             
             // Speed chart preview
             SpeedChartView(speedHistory: viewModel.getSpeedHistory())
-                .frame(height: 50)
+                .frame(height: 120)
         }
         .padding()
     }
@@ -240,11 +240,18 @@ struct SpeedChartView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background
-                RoundedRectangle(cornerRadius: 4)
+                // Background with border
+                RoundedRectangle(cornerRadius: 6)
                     .fill(Color(NSColor.controlBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
                 
                 if !speedHistory.isEmpty {
+                    // Grid lines
+                    GridLines(size: geometry.size)
+                    
                     // Upload line
                     SpeedLine(
                         speeds: speedHistory.map { $0.upload },
@@ -258,11 +265,68 @@ struct SpeedChartView: View {
                         color: .blue,
                         size: geometry.size
                     )
+                    
+                    // Legend
+                    VStack {
+                        HStack {
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color.orange)
+                                    .frame(width: 8, height: 8)
+                                Text("Upload")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .fill(Color.blue)
+                                    .frame(width: 8, height: 8)
+                                Text("Download")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.top, 4)
+                        
+                        Spacer()
+                    }
                 } else {
                     Text("No data")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+            }
+        }
+    }
+}
+
+struct GridLines: View {
+    let size: CGSize
+    
+    var body: some View {
+        ZStack {
+            // Horizontal grid lines
+            ForEach(0..<5, id: \.self) { i in
+                let y = size.height * CGFloat(i) / 4
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: size.width, y: y))
+                }
+                .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
+            }
+            
+            // Vertical grid lines (fewer for cleaner look)
+            ForEach(0..<6, id: \.self) { i in
+                let x = size.width * CGFloat(i) / 5
+                Path { path in
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x, y: size.height))
+                }
+                .stroke(Color.gray.opacity(0.15), lineWidth: 0.5)
             }
         }
     }
@@ -308,7 +372,8 @@ struct SpeedLine: View {
                 }
             }
         }
-        .stroke(color, lineWidth: 1.5)
+        .stroke(color, lineWidth: 2.0)
+        .shadow(color: color.opacity(0.3), radius: 1, x: 0, y: 1)
     }
 }
 

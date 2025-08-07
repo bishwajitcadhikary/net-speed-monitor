@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.0'
+        
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+        
+    - name: Install XcodeGen
+      run: |
+        gem install xcodegen
+        
+    - name: Generate Xcode project
+      run: |
+        xcodegen generate
+        
+    - name: Build application (Debug)
+      run: |
+        xcodebuild -project NetSpeedMonitor.xcodeproj \
+          -scheme NetSpeedMonitor \
+          -configuration Debug \
+          -destination 'platform=macOS' \
+          build \
+          CODE_SIGN_STYLE=Manual \
+          CODE_SIGN_IDENTITY="" \
+          DEVELOPMENT_TEAM=""
+          
+    - name: Build application (Release)
+      run: |
+        xcodebuild -project NetSpeedMonitor.xcodeproj \
+          -scheme NetSpeedMonitor \
+          -configuration Release \
+          -destination 'platform=macOS' \
+          -archivePath NetSpeedMonitor.xcarchive \
+          archive \
+          CODE_SIGN_STYLE=Manual \
+          CODE_SIGN_IDENTITY="" \
+          DEVELOPMENT_TEAM=""
+          
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: NetSpeedMonitor-build-${{ github.sha }}
+        path: NetSpeedMonitor.xcarchive
+        retention-days: 7

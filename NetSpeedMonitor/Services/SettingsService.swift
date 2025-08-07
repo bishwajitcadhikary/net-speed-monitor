@@ -67,8 +67,23 @@ class SettingsService: ObservableObject {
         saveSettings()
     }
     
-    func updateDarkMode(_ enabled: Bool) {
-        settings.isDarkMode = enabled
+    func updateSpeedAlertNotifications(_ enabled: Bool) {
+        settings.speedAlertNotifications = enabled
+        saveSettings()
+    }
+    
+    func updateInterfaceChangeNotifications(_ enabled: Bool) {
+        settings.interfaceChangeNotifications = enabled
+        saveSettings()
+    }
+    
+    func updateConnectionStatusNotifications(_ enabled: Bool) {
+        settings.connectionStatusNotifications = enabled
+        saveSettings()
+    }
+    
+    func updateTheme(_ theme: AppSettings.Theme) {
+        settings.theme = theme
         saveSettings()
     }
     
@@ -145,7 +160,7 @@ class NotificationService: ObservableObject {
     }
     
     @MainActor func checkForSpeedAlert(currentSpeed: NetworkSpeed) {
-        guard settings.settings.showNotifications else { return }
+        guard settings.settings.showNotifications && settings.settings.speedAlertNotifications else { return }
         
         let totalSpeed = (currentSpeed.upload + currentSpeed.download) / (1024 * 1024) // Convert to MB/s
         let threshold = settings.settings.notificationThreshold
@@ -181,7 +196,7 @@ class NotificationService: ObservableObject {
     }
     
     @MainActor func sendInterfaceChangeNotification(newInterface: NetworkInterface) {
-        guard settings.settings.showNotifications else { return }
+        guard settings.settings.showNotifications && settings.settings.interfaceChangeNotifications else { return }
         
         let content = UNMutableNotificationContent()
         content.title = "Network Interface Changed"
@@ -190,6 +205,23 @@ class NotificationService: ObservableObject {
         
         let request = UNNotificationRequest(
             identifier: "interface-change-\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(request)
+    }
+    
+    @MainActor func sendConnectionStatusNotification(isConnected: Bool) {
+        guard settings.settings.showNotifications && settings.settings.connectionStatusNotifications else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = isConnected ? "Network Connected" : "Network Disconnected"
+        content.body = isConnected ? "Internet connection has been restored" : "Internet connection has been lost"
+        content.sound = .default
+        
+        let request = UNNotificationRequest(
+            identifier: "connection-status-\(Date().timeIntervalSince1970)",
             content: content,
             trigger: nil
         )

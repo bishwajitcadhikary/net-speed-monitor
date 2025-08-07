@@ -8,8 +8,6 @@
 	<string>Net Speed Monitor</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIconFile</key>
-	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.frolax.netspeedmonitor</string>
 	<key>CFBundleInfoDictionaryVersion</key>

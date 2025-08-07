@@ -6,10 +6,9 @@ struct SettingsView: View {
     
     private let tabs = [
         (id: 0, icon: "gear", title: "General"),
-        (id: 1, icon: "display", title: "Display"),
-        (id: 2, icon: "bell", title: "Notifications"),
-        (id: 3, icon: "slider.horizontal.3", title: "Advanced"),
-        (id: 4, icon: "info.circle", title: "About")
+        (id: 1, icon: "bell", title: "Notifications"),
+        (id: 2, icon: "slider.horizontal.3", title: "Advanced"),
+        (id: 3, icon: "info.circle", title: "About")
     ]
     
     var body: some View {
@@ -51,12 +50,10 @@ struct SettingsView: View {
                     case 0:
                         GeneralSettingsView(viewModel: viewModel)
                     case 1:
-                        DisplaySettingsView(viewModel: viewModel)
-                    case 2:
                         NotificationSettingsView(viewModel: viewModel)
-                    case 3:
+                    case 2:
                         AdvancedSettingsView(viewModel: viewModel)
-                    case 4:
+                    case 3:
                         AboutSettingsView(viewModel: viewModel)
                     default:
                         GeneralSettingsView(viewModel: viewModel)
@@ -200,79 +197,7 @@ struct GeneralSettingsView: View {
     }
 }
 
-struct DisplaySettingsView: View {
-    @ObservedObject var viewModel: NetworkMonitorViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Display Settings")
-                .font(.headline)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Toggle(
-                        "Dark Mode",
-                        isOn: Binding(
-                            get: { viewModel.settings.isDarkMode },
-                            set: { viewModel.updateDarkMode($0) }
-                        )
-                    )
-                    Spacer()
-                }
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Menu Bar Preview:")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    HStack {
-                        Text("Current: ")
-                        Text("Custom Status Bar")
-                            .font(.system(size: 11, design: .monospaced))
-                            .padding(4)
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(4)
-                        Spacer()
-                    }
-                    
-                    Text("The menu bar shows network speeds with icons, arrows, and toggle switches in a modern layout.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Network Information:")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                    
-                    if let interface = viewModel.networkStats.activeInterface {
-                        InfoItemView(label: "Interface", value: interface.name)
-                        InfoItemView(label: "Type", value: interface.type.rawValue)
-                        InfoItemView(label: "Status", value: interface.isActive ? "Connected" : "Disconnected")
-                        
-                        if let ip = interface.ipAddress {
-                            InfoItemView(label: "Local IP", value: ip)
-                        }
-                    } else {
-                        Text("No active connection")
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    if let publicIP = viewModel.networkStats.publicIP {
-                        InfoItemView(label: "Public IP", value: publicIP)
-                    }
-                    
-                    if let ping = viewModel.networkStats.ping {
-                        InfoItemView(label: "Ping", value: String(format: "%.0f ms", ping))
-                    }
-                }
-            }
-            
-            Spacer()
-        }
-        .padding()
-    }
-}
+
 
 struct InfoItemView: View {
     let label: String
@@ -356,15 +281,50 @@ struct NotificationSettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("You will be notified when:")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Notification Types:")
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Toggle(
+                                "Speed Alerts",
+                                isOn: Binding(
+                                    get: { viewModel.settings.speedAlertNotifications },
+                                    set: { viewModel.updateSpeedAlertNotifications($0) }
+                                )
+                            )
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            Toggle(
+                                "Interface Changes",
+                                isOn: Binding(
+                                    get: { viewModel.settings.interfaceChangeNotifications },
+                                    set: { viewModel.updateInterfaceChangeNotifications($0) }
+                                )
+                            )
+                            Spacer()
+                        }
+                        
+                        HStack {
+                            Toggle(
+                                "Connection Status",
+                                isOn: Binding(
+                                    get: { viewModel.settings.connectionStatusNotifications },
+                                    set: { viewModel.updateConnectionStatusNotifications($0) }
+                                )
+                            )
+                            Spacer()
+                        }
+                    }
+                    
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("• Network speed drops below the threshold")
-                        Text("• Network interface changes (Wi-Fi ↔ Ethernet)")
-                        Text("• Connection is lost or restored")
+                        Text("• Speed Alerts: Notify when network speed drops below threshold")
+                        Text("• Interface Changes: Notify when switching between Wi-Fi/Ethernet")
+                        Text("• Connection Status: Notify when connection is lost or restored")
                     }
                     .font(.caption)
                     .foregroundColor(.secondary)

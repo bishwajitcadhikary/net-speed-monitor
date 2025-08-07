@@ -86,7 +86,26 @@ struct AppSettings: Codable {
     var showNotifications: Bool = false
     var notificationThreshold: Double = 1.0 // MB/s
     var notificationDuration: Int = 5 // seconds
-    var isDarkMode: Bool = false
+    
+    // Individual notification settings
+    var speedAlertNotifications: Bool = true
+    var interfaceChangeNotifications: Bool = true
+    var connectionStatusNotifications: Bool = true
+    var theme: Theme = .system
+    
+    enum Theme: String, CaseIterable, Codable {
+        case light = "light"
+        case dark = "dark"
+        case system = "system"
+        
+        var displayName: String {
+            switch self {
+            case .light: return "Light"
+            case .dark: return "Dark"
+            case .system: return "System (Default)"
+            }
+        }
+    }
     
     enum RefreshRate: Double, CaseIterable, Codable {
         case oneSecond = 1.0
