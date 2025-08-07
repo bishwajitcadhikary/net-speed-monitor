@@ -75,13 +75,23 @@ jobs:
           NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg
         retention-days: 30
         
+    - name: Check if release exists
+      id: check_release
+      run: |
+        if gh release view ${{ github.ref_name }} --repo ${{ github.repository }} >/dev/null 2>&1; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+        
     - name: Create Release
+      if: steps.check_release.outputs.exists == 'false'
       uses: softprops/action-gh-release@v1
       with:
         files: NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg
         draft: false
         prerelease: true
-        title: Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
+        name: Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
         body: |
           ## Net Speed Monitor ${{ github.event.inputs.version || github.ref_name }}
           
@@ -116,3 +126,8 @@ jobs:
           https://github.com/bishwajitcadhikary/net-speed-monitor/issues
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload to existing release
+      if: steps.check_release.outputs.exists == 'true'
+      run: |
+        gh release upload ${{ github.ref_name }} NetSpeedMonitor-${{ github.event.inputs.version || github.ref_name }}.dmg --repo ${{ github.repository }}
