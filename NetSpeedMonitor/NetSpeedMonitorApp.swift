@@ -57,13 +57,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.subviews.forEach { $0.removeFromSuperview() }
             button.addSubview(customView)
             
-            // Position the custom view
+            // Position the custom view with minimal padding
             customView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                customView.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 4),
-                customView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -4),
-                customView.topAnchor.constraint(equalTo: button.topAnchor, constant: 2),
-                customView.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -2)
+                customView.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 2),
+                customView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -2),
+                customView.topAnchor.constraint(equalTo: button.topAnchor, constant: 1),
+                customView.bottomAnchor.constraint(equalTo: button.bottomAnchor, constant: -1)
             ])
             
             // Add right-click context menu
@@ -158,7 +158,7 @@ struct StatusBarContentView: View {
     @ObservedObject var viewModel: NetworkMonitorViewModel
     
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             // Traffic direction arrows
             VStack(spacing: 1) {
                 Image(systemName: "arrow.up")
@@ -186,7 +186,7 @@ struct StatusBarContentView: View {
             .frame(width: 45, alignment: .trailing)
         }
         .frame(height: 20)
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 1)
         .background(Color.clear)
     }
     
